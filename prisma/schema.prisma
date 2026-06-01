@@ -1,0 +1,112 @@
+// RAVN Field Force — demo schema
+// One connected flow: Outlet → Visit → Order → fulfilment.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum OutletType {
+  BAR
+  CLUB
+  BEACH_CLUB
+  RESTAURANT
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  IN_DELIVERY
+  REJECTED
+}
+
+model Rep {
+  id       String  @id @default(cuid())
+  name     String
+  initials String
+  area     String // "Canggu · Seminyak"
+  visits   Visit[]
+  orders   Order[]
+}
+
+model Outlet {
+  id           String     @id @default(cuid())
+  name         String
+  area         String // Canggu, Seminyak, Ubud, Sanur...
+  type         OutletType
+  address      String
+  lat          Float
+  lng          Float
+  distanceKm   Float // demo: distance from the rep right now
+  contactName  String?
+  contactPhone String?
+  brands       String[] // sales-notes brands at this outlet
+  priority     Boolean    @default(false)
+  lastVisitAt  DateTime?
+  visits       Visit[]
+  orders       Order[]
+
+  @@index([area])
+}
+
+model Product {
+  id           String      @id @default(cuid())
+  brand        String
+  name         String // "Jägermeister 700ml"
+  sku          String      @unique // JAG-700
+  pricePerUnit Int // IDR per unit
+  unit         String      @default("btl")
+  orderLines   OrderLine[]
+}
+
+model Visit {
+  id           String   @id @default(cuid())
+  code         String   @unique // VST-8842
+  outletId     String
+  outlet       Outlet   @relation(fields: [outletId], references: [id])
+  repId        String
+  rep          Rep      @relation(fields: [repId], references: [id])
+  checkInAt    DateTime
+  gpsDriftM    Int      @default(8)
+  gpsConfirmed Boolean  @default(true)
+  photos       Json // [{ label: "Shelf", taken: true }]
+  competitors  Json // [{ brand: "Jägermeister", present: true }]
+  notes        String   @default("")
+  order        Order?
+
+  @@index([repId])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  code          String      @unique // ORD-4421
+  outletId      String
+  outlet        Outlet      @relation(fields: [outletId], references: [id])
+  repId         String
+  rep           Rep         @relation(fields: [repId], references: [id])
+  visitId       String?     @unique
+  visit         Visit?      @relation(fields: [visitId], references: [id])
+  status        OrderStatus @default(NEW)
+  total         Int
+  deliveryDate  DateTime
+  warehouseNote String?
+  createdAt     DateTime    @default(now())
+  lines         OrderLine[]
+
+  @@index([status])
+}
+
+model OrderLine {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  qty       Int
+  lineTotal Int // pricePerUnit * qty, snapshotted
+}

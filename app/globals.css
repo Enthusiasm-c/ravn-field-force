@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
+/*
+  RAVN Field Force — design language
+  Dark premium. Fraunces holds the total, mono holds the parts.
+  Distance is "mono ice blue" — the one number reps trust.
+  Stale accounts glow in Alpenglow (warm amber).
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0a0b0d;
+  --bg-elevated: #111317;
+  --surface: #15181d;
+  --surface-2: #1c2026;
+  --border: #262b33;
+  --border-strong: #353c46;
+
+  --text: #ecedef;
+  --text-muted: #8a909b;
+  --text-faint: #5b616b;
+
+  /* Distance / primary — mono ice blue */
+  --ice: #7cc5f0;
+  --ice-dim: #4a82a8;
+
+  /* Alpenglow — stale / warm warning */
+  --glow: #f3a26d;
+  --glow-strong: #ff8f5c;
+
+  /* Status */
+  --ok: #5fd08a;
+  --warn: #f3c969;
+  --danger: #e5705b;
+
+  /* Money accent */
+  --gold: #d8c08a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+
+  --color-ice: var(--ice);
+  --color-ice-dim: var(--ice-dim);
+  --color-glow: var(--glow);
+  --color-glow-strong: var(--glow-strong);
+
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-gold: var(--gold);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-fraunces);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tabular figures for every price — columns line up, math is legible */
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Large serif for the decision number */
+.serif {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+}
+
+/* The one number reps trust */
+.distance {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ice);
+  letter-spacing: -0.02em;
+}
+
+/* Stale accounts glow in Alpenglow */
+.alpenglow {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent),
+    0 0 24px -6px color-mix(in srgb, var(--glow) 45%, transparent);
+}
+
+.glass {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+/* Eyebrow / spec labels — uppercase mono micro-type */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 9999px;
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+  animation: pulse-glow 2s ease-in-out infinite;
 }
