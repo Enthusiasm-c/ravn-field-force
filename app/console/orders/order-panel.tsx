@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Check, Pencil, X, ArrowRight, Minus, Plus, MapPin } from "lucide-react";
 import { formatIDR } from "@/lib/utils";
 import { confirmOrder, rejectOrder, updateOrderLines } from "@/app/actions";
-import { STATUS_META } from "@/lib/demo";
+import { STATUS_META, photoSrc } from "@/lib/demo";
 import type { OrderStatus } from "@prisma/client";
 
 type Line = { id: string; name: string; sku: string; price: number; qty: number };
@@ -119,15 +119,21 @@ export function OrderPanel({
         <>
           <p className="eyebrow mt-6">Visit context</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
-            {visit.photos.map((p, i) => (
+            {visit.photos.map((p) => (
               <div
                 key={p.label}
-                className="flex aspect-[4/3] items-end rounded-lg border border-border p-1.5 text-[9px] text-text/80"
-                style={{
-                  background: `linear-gradient(135deg, color-mix(in srgb, var(--ice) ${18 + i * 8}%, var(--surface)), var(--surface-2))`,
-                }}
+                className="relative aspect-[4/3] overflow-hidden rounded-lg border border-border"
               >
-                {p.label}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photoSrc(p.label)}
+                  alt={p.label}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-1.5 pb-1 pt-4 text-[9px] font-medium text-white">
+                  {p.label}
+                </span>
               </div>
             ))}
           </div>

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { PhoneFrame } from "@/components/phone-frame";
 import { MapView } from "@/components/map/map-view";
-import { PIN } from "@/lib/demo";
+import { PIN, photoSrc } from "@/lib/demo";
 
 type Photo = { label: string; taken: boolean };
 type Comp = { brand: string; present: boolean };
@@ -103,17 +103,21 @@ export function VisitCapture(props: {
                       prev.map((x, j) => (j === i ? { ...x, taken: !x.taken } : x))
                     )
                   }
-                  className="relative aspect-square overflow-hidden rounded-xl border border-border"
-                  style={{
-                    background: p.taken
-                      ? `linear-gradient(135deg, color-mix(in srgb, var(--ice) ${20 + i * 8}%, var(--surface)), var(--surface-2))`
-                      : "var(--surface)",
-                  }}
+                  className="relative aspect-square overflow-hidden rounded-xl border border-border bg-surface"
                 >
                   {p.taken ? (
-                    <span className="absolute bottom-1 left-1.5 text-[9px] font-medium text-text/90">
-                      {p.label}
-                    </span>
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photoSrc(p.label)}
+                        alt={p.label}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-1.5 pb-1 pt-3 text-[9px] font-medium text-white">
+                        {p.label}
+                      </span>
+                    </>
                   ) : (
                     <Camera className="absolute inset-0 m-auto h-4 w-4 text-faint" />
                   )}

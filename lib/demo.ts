@@ -47,6 +47,18 @@ export const STATUS_META = {
   REJECTED: { label: "Rejected", color: "var(--danger)" },
 } as const;
 
+// Real visit photos (served locally from /public/photos).
+const PHOTO_SRC: Record<string, string> = {
+  Shelf: "/photos/shelf.jpg",
+  Menu: "/photos/menu.jpg",
+  Promo: "/photos/promo.jpg",
+  Drinks: "/photos/drinks.jpg",
+  Bar: "/photos/bar.jpg",
+};
+export function photoSrc(label: string): string {
+  return PHOTO_SRC[label] ?? "/photos/bar.jpg";
+}
+
 export const OUTLET_TYPE_LABEL = {
   BAR: "Bar",
   CLUB: "Club",
