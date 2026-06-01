@@ -13,7 +13,7 @@ export function PhoneFrame({
   return (
     <div
       className={cn(
-        "relative h-[844px] w-[390px] shrink-0 overflow-hidden rounded-[44px] border border-border-strong bg-bg shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)]",
+        "relative h-[844px] w-[390px] shrink-0 overflow-hidden rounded-[44px] border border-border-strong bg-bg shadow-[0_30px_90px_-28px_rgba(20,30,55,0.30)]",
         className
       )}
       style={{ outline: "8px solid #1a1d23", outlineOffset: "-1px" }}

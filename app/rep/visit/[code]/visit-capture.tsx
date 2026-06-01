@@ -157,7 +157,7 @@ export function VisitCapture(props: {
           </Link>
           <Link
             href={`/rep/po/new?visit=${props.code}`}
-            className="flex flex-[1.4] items-center justify-center gap-1.5 rounded-xl bg-ice py-3 text-center text-[14px] font-semibold text-bg"
+            className="flex flex-[1.4] items-center justify-center gap-1.5 rounded-xl bg-ice py-3 text-center text-[14px] font-semibold text-white"
           >
             Send PO <ArrowRight className="h-4 w-4" />
           </Link>

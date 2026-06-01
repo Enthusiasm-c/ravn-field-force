@@ -280,7 +280,7 @@ export default async function OrdersPage({
               {focused.status === "NEW" ? (
                 <div className="mt-6 flex gap-2">
                   <form action={confirmOrder.bind(null, focused.id)} className="flex-[1.4]">
-                    <button className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ok py-2.5 text-[13px] font-semibold text-bg">
+                    <button className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ok py-2.5 text-[13px] font-semibold text-white">
                       <Check className="h-4 w-4" /> Confirm order
                     </button>
                   </form>

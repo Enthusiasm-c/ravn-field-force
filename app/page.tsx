@@ -33,11 +33,11 @@ export default function Home() {
     <main className="relative min-h-dvh overflow-hidden">
       {/* ambient glow */}
       <div
-        className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[820px] -translate-x-1/2 rounded-full opacity-30 blur-[120px]"
+        className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[820px] -translate-x-1/2 rounded-full opacity-[0.12] blur-[120px]"
         style={{ background: "radial-gradient(closest-side, var(--ice), transparent)" }}
       />
       <div
-        className="pointer-events-none absolute bottom-0 right-0 h-[400px] w-[500px] opacity-20 blur-[120px]"
+        className="pointer-events-none absolute bottom-0 right-0 h-[400px] w-[500px] opacity-[0.08] blur-[120px]"
         style={{ background: "radial-gradient(closest-side, var(--glow), transparent)" }}
       />
 

@@ -116,7 +116,7 @@ export function PoBuilder(props: {
           <button
             onClick={send}
             disabled={sent}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-ice py-3.5 text-[15px] font-semibold text-bg transition-opacity disabled:opacity-70"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-ice py-3.5 text-[15px] font-semibold text-white transition-opacity disabled:opacity-70"
           >
             {sent ? "Sent to office ✓" : (
               <>

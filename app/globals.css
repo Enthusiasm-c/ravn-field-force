@@ -8,32 +8,32 @@
 */
 
 :root {
-  --bg: #0a0b0d;
-  --bg-elevated: #111317;
-  --surface: #15181d;
-  --surface-2: #1c2026;
-  --border: #262b33;
-  --border-strong: #353c46;
+  --bg: #f5f6f8;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #eef0f3;
+  --border: #e4e7ec;
+  --border-strong: #d2d7de;
 
-  --text: #ecedef;
-  --text-muted: #8a909b;
-  --text-faint: #5b616b;
+  --text: #1a1e25;
+  --text-muted: #5a636f;
+  --text-faint: #98a1ad;
 
-  /* Distance / primary — mono ice blue */
-  --ice: #7cc5f0;
-  --ice-dim: #4a82a8;
+  /* Distance / primary — ice blue (button-capable on white) */
+  --ice: #1f6fd6;
+  --ice-dim: #7aabe2;
 
   /* Alpenglow — stale / warm warning */
-  --glow: #f3a26d;
-  --glow-strong: #ff8f5c;
+  --glow: #dd7a36;
+  --glow-strong: #c9611c;
 
   /* Status */
-  --ok: #5fd08a;
-  --warn: #f3c969;
-  --danger: #e5705b;
+  --ok: #1f9d59;
+  --warn: #c5891a;
+  --danger: #d64a45;
 
   /* Money accent */
-  --gold: #d8c08a;
+  --gold: #a37a2c;
 }
 
 @theme inline {
@@ -68,7 +68,7 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -102,9 +102,10 @@ body {
 
 /* Stale accounts glow in Alpenglow */
 .alpenglow {
+  background: color-mix(in srgb, var(--glow) 6%, var(--surface)) !important;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent),
-    0 0 24px -6px color-mix(in srgb, var(--glow) 45%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--glow) 30%, transparent),
+    0 6px 20px -8px color-mix(in srgb, var(--glow) 40%, transparent);
 }
 
 .glass {

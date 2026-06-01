@@ -13,7 +13,7 @@ export function RepNav({ active }: { active: "outlets" | "orders" | "me" }) {
     <nav className="sticky bottom-0 z-20 border-t border-border bg-bg/90 backdrop-blur">
       <div className="relative flex items-center justify-around px-6 pb-6 pt-3">
         {/* center FAB */}
-        <button className="absolute -top-5 left-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-ice text-bg shadow-[0_8px_24px_-6px_var(--ice)]">
+        <button className="absolute -top-5 left-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-ice text-white shadow-[0_8px_24px_-6px_var(--ice)]">
           <Plus className="h-6 w-6" strokeWidth={2.4} />
         </button>
         {TABS.map((t, i) => {
