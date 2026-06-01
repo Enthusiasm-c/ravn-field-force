@@ -182,6 +182,95 @@ async function main() {
     lastVisit: daysAgo(4),
   });
 
+  // ── 41 more real Bali venues — populate the coverage map ──
+  const AREA_CENTROID: Record<string, [number, number]> = {
+    Canggu: [-8.6478, 115.1385],
+    Seminyak: [-8.6905, 115.1568],
+    "Kuta Selatan": [-8.829, 115.085],
+    Ubud: [-8.5069, 115.2625],
+    Sanur: [-8.688, 115.262],
+    Amed: [-8.07, 115.64],
+  };
+  const AREA_KM: Record<string, number> = {
+    Canggu: 2,
+    Seminyak: 6,
+    "Kuta Selatan": 14,
+    Ubud: 22,
+    Sanur: 12,
+    Amed: 78,
+  };
+  type Seed = [string, string, OutletType, ("Jägermeister" | "José Cuervo")[]];
+  const VENUES: Seed[] = [
+    // Canggu
+    ["La Brisa", "Canggu", OutletType.BEACH_CLUB, ["Jägermeister", "José Cuervo"]],
+    ["The Lawn Canggu", "Canggu", OutletType.BEACH_CLUB, ["Jägermeister"]],
+    ["Deus Ex Machina", "Canggu", OutletType.BAR, ["Jägermeister"]],
+    ["Pretty Poison", "Canggu", OutletType.BAR, ["José Cuervo"]],
+    ["Crate Cafe", "Canggu", OutletType.RESTAURANT, ["José Cuervo"]],
+    ["Milk & Madu", "Canggu", OutletType.RESTAURANT, ["Jägermeister"]],
+    ["Black Sand Brewery", "Canggu", OutletType.BAR, ["Jägermeister", "José Cuervo"]],
+    ["Lacalita", "Canggu", OutletType.BAR, ["José Cuervo"]],
+    ["Shelter Cafe", "Canggu", OutletType.RESTAURANT, ["Jägermeister"]],
+    // Seminyak
+    ["Ku De Ta", "Seminyak", OutletType.BEACH_CLUB, ["Jägermeister", "José Cuervo"]],
+    ["Mrs Sippy", "Seminyak", OutletType.CLUB, ["Jägermeister"]],
+    ["Motel Mexicola", "Seminyak", OutletType.BAR, ["José Cuervo"]],
+    ["Da Maria", "Seminyak", OutletType.RESTAURANT, ["José Cuervo"]],
+    ["Sisterfields", "Seminyak", OutletType.RESTAURANT, ["Jägermeister"]],
+    ["Revolver Espresso", "Seminyak", OutletType.RESTAURANT, ["José Cuervo"]],
+    ["La Favela", "Seminyak", OutletType.CLUB, ["Jägermeister", "José Cuervo"]],
+    ["Sarong", "Seminyak", OutletType.RESTAURANT, ["Jägermeister"]],
+    ["Bikini Seminyak", "Seminyak", OutletType.BAR, ["José Cuervo"]],
+    // Kuta Selatan / Uluwatu
+    ["Single Fin", "Kuta Selatan", OutletType.BAR, ["Jägermeister", "José Cuervo"]],
+    ["El Kabron", "Kuta Selatan", OutletType.BEACH_CLUB, ["Jägermeister"]],
+    ["Sundays Beach Club", "Kuta Selatan", OutletType.BEACH_CLUB, ["José Cuervo"]],
+    ["Savaya Bali", "Kuta Selatan", OutletType.CLUB, ["Jägermeister", "José Cuervo"]],
+    ["Ulu Cliffhouse", "Kuta Selatan", OutletType.BEACH_CLUB, ["Jägermeister"]],
+    ["Karma Beach", "Kuta Selatan", OutletType.BEACH_CLUB, ["José Cuervo"]],
+    ["The Cashew Tree", "Kuta Selatan", OutletType.BAR, ["Jägermeister"]],
+    // Ubud
+    ["Mozaic", "Ubud", OutletType.RESTAURANT, ["José Cuervo"]],
+    ["Locavore", "Ubud", OutletType.RESTAURANT, ["Jägermeister"]],
+    ["CP Lounge", "Ubud", OutletType.CLUB, ["Jägermeister", "José Cuervo"]],
+    ["Night Rooster", "Ubud", OutletType.BAR, ["José Cuervo"]],
+    ["No Mas", "Ubud", OutletType.BAR, ["Jägermeister"]],
+    ["Hujan Locale", "Ubud", OutletType.RESTAURANT, ["José Cuervo"]],
+    ["Bridges Bali", "Ubud", OutletType.RESTAURANT, ["Jägermeister"]],
+    // Sanur
+    ["Char Bar Sanur", "Sanur", OutletType.BAR, ["Jägermeister"]],
+    ["Byrdhouse", "Sanur", OutletType.BAR, ["José Cuervo"]],
+    ["Fire Station", "Sanur", OutletType.RESTAURANT, ["Jägermeister", "José Cuervo"]],
+    ["Genius Cafe", "Sanur", OutletType.RESTAURANT, ["José Cuervo"]],
+    ["Stolen Wine", "Sanur", OutletType.BAR, ["Jägermeister"]],
+    // Amed
+    ["Warung Enak Amed", "Amed", OutletType.RESTAURANT, ["José Cuervo"]],
+    ["Sails Restaurant", "Amed", OutletType.RESTAURANT, ["Jägermeister"]],
+  ];
+  const lastVisitPattern = [3, 8, 2, 16, 41, 6, 22, null, 11, 34, 5, 19, 48, 4, 13];
+  const extraOutlets = [];
+  for (let i = 0; i < VENUES.length; i++) {
+    const [name, area, type, brands] = VENUES[i];
+    const [clat, clng] = AREA_CENTROID[area];
+    const ang = (i * 137.5 * Math.PI) / 180; // golden-angle spread
+    const rad = 0.004 + (i % 5) * 0.0035;
+    const lv = lastVisitPattern[i % lastVisitPattern.length];
+    extraOutlets.push(
+      await O({
+        name,
+        area,
+        type,
+        address: `${area}, Bali`,
+        lat: clat + Math.cos(ang) * rad,
+        lng: clng + Math.sin(ang) * rad,
+        km: AREA_KM[area] + ((i % 4) - 1.5),
+        brands,
+        priority: i % 6 === 0,
+        lastVisit: lv === null ? null : daysAgo(lv),
+      })
+    );
+  }
+
   // ── Hero visit: VST-8842 at Old Man's ─────────────────
   const heroVisit = await prisma.visit.create({
     data: {
@@ -379,12 +468,13 @@ async function main() {
     new Date("2026-01-12T11:00:00+08:00"),
     new Date("2026-02-12T11:00:00+08:00"),
     new Date("2026-03-12T11:00:00+08:00"),
+    new Date("2026-04-09T11:00:00+08:00"),
   ];
   const trends: Record<string, number[]> = {
-    grow: [0.55, 0.68, 0.8, 0.9, 1.0, 1.15],
-    decline: [1.25, 1.12, 1.0, 0.85, 0.72, 0.6],
-    steady: [0.95, 1.02, 0.98, 1.05, 1.0, 1.03],
-    volatile: [0.7, 1.25, 0.6, 1.35, 0.85, 1.2],
+    grow: [0.55, 0.68, 0.8, 0.9, 1.0, 1.15, 1.28],
+    decline: [1.3, 1.18, 1.05, 0.92, 0.8, 0.7, 0.62],
+    steady: [0.95, 1.02, 0.98, 1.05, 1.0, 1.03, 1.0],
+    volatile: [0.7, 1.25, 0.6, 1.35, 0.85, 1.2, 0.95],
   };
   const trendKeys = ["grow", "decline", "steady", "volatile"];
   const baseUnitsFor = (t: OutletType) =>
@@ -392,8 +482,12 @@ async function main() {
 
   const allOutlets = [
     oldMans, finns, laLaguna, luigisHot, sariMade, potatoHead, luigis, laPlancha, ulekan,
+    ...extraOutlets,
   ];
 
+  // Build all history operations, then run them in bounded chunks (fast + safe
+  // on a pooled connection).
+  const thunks: (() => Promise<unknown>)[] = [];
   let histVisits = 0;
   let histOrders = 0;
   for (let idx = 0; idx < allOutlets.length; idx++) {
@@ -415,41 +509,50 @@ async function main() {
             ]
           : [{ product: pool[0], qty: units }];
 
-      await makeOrder({
-        code: `ORD-3${idx}${m}`,
-        outletId: o.id,
-        repId: rep.id,
-        status: OrderStatus.CONFIRMED,
-        createdAt: date,
-        deliveryDate: new Date(date.getTime() + 86_400_000),
-        lines,
-      });
-      histOrders++;
-
-      await prisma.visit.create({
-        data: {
-          code: `VST-9${idx}${m}`,
+      thunks.push(() =>
+        makeOrder({
+          code: `ORD-3${idx}-${m}`,
           outletId: o.id,
           repId: rep.id,
-          checkInAt: date,
-          gpsDriftM: 6 + (m % 3) * 4,
-          gpsConfirmed: true,
-          photos: [
-            { label: "Shelf", taken: true },
-            { label: "Menu", taken: m % 2 === 0 },
-          ],
-          competitors: [
-            { brand: "Jägermeister", present: true },
-            { brand: "Johnnie Walker", present: m % 2 === 0 },
-          ],
-          notes:
-            m % 2 === 0
-              ? "Stock check done. Owner happy with rotation, restocked house pour."
-              : "Quick visit — discussed weekend promo and menu placement.",
-        },
-      });
+          status: OrderStatus.CONFIRMED,
+          createdAt: date,
+          deliveryDate: new Date(date.getTime() + 86_400_000),
+          lines,
+        })
+      );
+      histOrders++;
+
+      thunks.push(() =>
+        prisma.visit.create({
+          data: {
+            code: `VST-9-${idx}-${m}`,
+            outletId: o.id,
+            repId: rep.id,
+            checkInAt: date,
+            gpsDriftM: 6 + (m % 3) * 4,
+            gpsConfirmed: true,
+            photos: [
+              { label: "Shelf", taken: true },
+              { label: "Menu", taken: m % 2 === 0 },
+            ],
+            competitors: [
+              { brand: "Jägermeister", present: true },
+              { brand: "Johnnie Walker", present: m % 2 === 0 },
+            ],
+            notes:
+              m % 2 === 0
+                ? "Stock check done. Owner happy with rotation, restocked house pour."
+                : "Quick visit — discussed weekend promo and menu placement.",
+          },
+        })
+      );
       histVisits++;
     }
+  }
+
+  const CHUNK = 20;
+  for (let i = 0; i < thunks.length; i += CHUNK) {
+    await Promise.all(thunks.slice(i, i + CHUNK).map((t) => t()));
   }
 
   console.log("Seeded:", {

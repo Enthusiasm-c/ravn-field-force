@@ -17,6 +17,7 @@ export function MapView(props: {
   points: MapPoint[];
   accuracy?: { lat: number; lng: number; radiusM: number; color: string };
   zoom?: number;
+  center?: [number, number];
   className?: string;
 }) {
   return <LeafletMap {...props} />;

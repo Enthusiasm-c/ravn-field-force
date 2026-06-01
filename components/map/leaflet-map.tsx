@@ -53,16 +53,17 @@ export function LeafletMap({
   points,
   accuracy,
   zoom,
+  center: centerProp,
   className,
 }: {
   points: MapPoint[];
   accuracy?: Accuracy;
   zoom?: number;
+  center?: [number, number];
   className?: string;
 }) {
-  const center: [number, number] = points[0]
-    ? [points[0].lat, points[0].lng]
-    : [-8.65, 115.14];
+  const center: [number, number] =
+    centerProp ?? (points[0] ? [points[0].lat, points[0].lng] : [-8.65, 115.14]);
 
   return (
     <MapContainer
@@ -108,7 +109,7 @@ export function LeafletMap({
           </Tooltip>
         </CircleMarker>
       ))}
-      {!accuracy && <FitBounds points={points} />}
+      {!accuracy && !centerProp && <FitBounds points={points} />}
       <KeepSized />
     </MapContainer>
   );

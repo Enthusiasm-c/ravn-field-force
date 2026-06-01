@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { ConsoleTopbar } from "@/components/console-topbar";
 import { compactIDR, DEMO_DAY_START } from "@/lib/utils";
@@ -39,9 +40,10 @@ export default async function RepsPage() {
             const week = weekOf(r.name);
             const live = liveOf(r.id);
             return (
-              <div
+              <Link
                 key={r.id}
-                className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4"
+                href={`/console/reps/${r.id}`}
+                className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-surface-2/50"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-2 text-[13px] font-semibold">
                   {r.initials}
@@ -59,7 +61,7 @@ export default async function RepsPage() {
                     accent
                   />
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

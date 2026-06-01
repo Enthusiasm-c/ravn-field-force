@@ -48,6 +48,7 @@ export default async function DashboardPage() {
       label: o.name,
       sublabel: o.area,
       color,
+      radius: 5,
     };
   });
 
@@ -124,7 +125,7 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="relative mt-4 h-[260px] overflow-hidden rounded-xl border border-border">
-              <MapView points={points} zoom={11} className="z-0" />
+              <MapView points={points} center={[-8.62, 115.22]} zoom={10} className="z-0" />
               <span className="pointer-events-none absolute bottom-2 right-3 z-[400] rounded bg-surface/80 px-1.5 py-0.5 text-[10px] text-faint backdrop-blur">
                 {outlets.length} outlets · live coverage
               </span>
