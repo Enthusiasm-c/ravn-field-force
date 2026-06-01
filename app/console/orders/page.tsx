@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Search, MapPin, Check, Pencil, X, ArrowRight } from "lucide-react";
+import { Search } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { OrderStatus } from "@prisma/client";
 import { formatIDR } from "@/lib/utils";
 import { STATUS_META, OUTLET_TYPE_LABEL } from "@/lib/demo";
-import { confirmOrder, rejectOrder } from "@/app/actions";
+import { OrderPanel } from "./order-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -218,94 +218,28 @@ export default async function OrdersPage({
                 )}
               </p>
 
-              {/* line items */}
-              <p className="eyebrow mt-5">Line items ({focused.lines.length})</p>
-              <div className="mt-2 space-y-2">
-                {focused.lines.map((l) => (
-                  <div
-                    key={l.id}
-                    className="flex items-center justify-between rounded-lg border border-border bg-surface/60 px-3 py-2"
-                  >
-                    <div>
-                      <p className="text-[12px] font-medium">{l.product.name}</p>
-                      <p className="eyebrow mt-0.5">{l.product.sku}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="tabular text-[12px]">{formatIDR(l.lineTotal)}</p>
-                      <p className="tabular text-[10px] text-faint">× {l.qty} btl</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* total */}
-              <div className="mt-3 flex items-end justify-between border-t border-border pt-3">
-                <p className="text-[11px] text-muted">
-                  {focused.lines.reduce((s, l) => s + l.qty, 0)} btl · delivery Sat 19 Apr
-                </p>
-                <p className="serif text-xl">
-                  <span className="text-[12px] text-muted">IDR </span>
-                  {formatIDR(focused.total)}
-                </p>
-              </div>
-
-              {/* visit context */}
-              {visit && (
-                <>
-                  <p className="eyebrow mt-6">Visit context</p>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    {photos.map((p, i) => (
-                      <div
-                        key={p.label}
-                        className="flex aspect-[4/3] items-end rounded-lg border border-border p-1.5 text-[9px] text-text/80"
-                        style={{
-                          background: `linear-gradient(135deg, color-mix(in srgb, var(--ice) ${18 + i * 8}%, var(--surface)), var(--surface-2))`,
-                        }}
-                      >
-                        {p.label}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-3 rounded-lg border border-border bg-surface/60 p-3 text-[12px] italic leading-relaxed text-text/85">
-                    &ldquo;{visit.notes}&rdquo;
-                  </p>
-                  <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted">
-                    <MapPin className="h-3 w-3" />
-                    {focused.outlet.address} · {focused.outlet.distanceKm} km from rep
-                  </p>
-                </>
-              )}
-
-              {/* actions */}
-              {focused.status === "NEW" ? (
-                <div className="mt-6 flex gap-2">
-                  <form action={confirmOrder.bind(null, focused.id)} className="flex-[1.4]">
-                    <button className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ok py-2.5 text-[13px] font-semibold text-white">
-                      <Check className="h-4 w-4" /> Confirm order
-                    </button>
-                  </form>
-                  <button className="flex items-center justify-center gap-1.5 rounded-lg border border-border-strong px-4 text-[13px] text-muted">
-                    <Pencil className="h-3.5 w-3.5" /> Edit
-                  </button>
-                  <form action={rejectOrder.bind(null, focused.id)}>
-                    <button className="flex h-full items-center justify-center gap-1.5 rounded-lg border border-danger/40 px-4 text-[13px] text-danger">
-                      <X className="h-3.5 w-3.5" /> Reject
-                    </button>
-                  </form>
-                </div>
-              ) : (
-                <div className="mt-6 flex items-center gap-2 rounded-lg border border-border bg-surface/60 px-3 py-2.5 text-[12px]">
-                  <ArrowRight className="h-3.5 w-3.5 text-muted" />
-                  <span style={{ color: STATUS_META[focused.status].color }}>
-                    {STATUS_META[focused.status].label}
-                  </span>
-                  <span className="text-muted">
-                    {focused.status === "CONFIRMED" && "· approved for fulfilment"}
-                    {focused.status === "IN_DELIVERY" && "· handed to logistics"}
-                    {focused.status === "REJECTED" && "· returned to rep"}
-                  </span>
-                </div>
-              )}
+              <OrderPanel
+                orderId={focused.id}
+                status={focused.status}
+                deliveryLabel="Sat 19 Apr"
+                initialLines={focused.lines.map((l) => ({
+                  id: l.id,
+                  name: l.product.name,
+                  sku: l.product.sku,
+                  price: l.product.pricePerUnit,
+                  qty: l.qty,
+                }))}
+                visit={
+                  visit
+                    ? {
+                        photos,
+                        notes: visit.notes,
+                        address: focused.outlet.address,
+                        distanceKm: focused.outlet.distanceKm,
+                      }
+                    : null
+                }
+              />
 
               <p className="mt-auto pt-5 text-[10px] text-faint">
                 04 / 05 · Order queue · synced live

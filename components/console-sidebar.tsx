@@ -15,10 +15,10 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/console/dashboard" },
   { label: "Orders", icon: ClipboardList, href: "/console/orders" },
-  { label: "Outlets", icon: Store, href: "#" },
-  { label: "Reps", icon: Users, href: "#" },
-  { label: "Inventory", icon: Boxes, href: "#" },
-  { label: "Reports", icon: FileBarChart, href: "#" },
+  { label: "Outlets", icon: Store, href: "/console/outlets" },
+  { label: "Reps", icon: Users, href: "/console/reps" },
+  { label: "Inventory", icon: Boxes, href: "/console/inventory" },
+  { label: "Reports", icon: FileBarChart, href: "/console/reports" },
 ];
 
 export function ConsoleSidebar() {
@@ -38,7 +38,6 @@ export function ConsoleSidebar() {
       <nav className="space-y-0.5">
         {NAV.map((n) => {
           const on = path === n.href;
-          const disabled = n.href === "#";
           return (
             <Link
               key={n.label}
@@ -47,8 +46,6 @@ export function ConsoleSidebar() {
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors",
                 on
                   ? "bg-ice/10 text-ice"
-                  : disabled
-                  ? "text-faint hover:text-muted"
                   : "text-muted hover:bg-surface hover:text-text"
               )}
             >
