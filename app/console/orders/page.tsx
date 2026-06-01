@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { OrderStatus } from "@prisma/client";
-import { formatIDR } from "@/lib/utils";
+import { formatIDR, DEMO_DAY_START } from "@/lib/utils";
 import { STATUS_META, OUTLET_TYPE_LABEL } from "@/lib/demo";
 import { OrderPanel } from "./order-panel";
 
@@ -32,13 +32,14 @@ export default async function OrdersPage({
   const sp = await searchParams;
   const tab = TABS.find((t) => t.key === sp.status) ?? TABS[0];
 
+  const today = { createdAt: { gte: DEMO_DAY_START } };
   const [orders, counts] = await Promise.all([
     prisma.order.findMany({
-      where: tab.status ? { status: tab.status } : undefined,
+      where: { ...today, ...(tab.status ? { status: tab.status } : {}) },
       orderBy: { createdAt: "desc" },
       include: { outlet: true, rep: true },
     }),
-    prisma.order.groupBy({ by: ["status"], _count: true }),
+    prisma.order.groupBy({ by: ["status"], _count: true, where: today }),
   ]);
 
   const countOf = (s: OrderStatus) =>

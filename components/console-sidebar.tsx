@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  ClipboardList,
-  Store,
-  Users,
-  Boxes,
-  FileBarChart,
-} from "lucide-react";
+import { LayoutDashboard, ClipboardList, Store, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -17,8 +10,6 @@ const NAV = [
   { label: "Orders", icon: ClipboardList, href: "/console/orders" },
   { label: "Outlets", icon: Store, href: "/console/outlets" },
   { label: "Reps", icon: Users, href: "/console/reps" },
-  { label: "Inventory", icon: Boxes, href: "/console/inventory" },
-  { label: "Reports", icon: FileBarChart, href: "/console/reports" },
 ];
 
 export function ConsoleSidebar() {
@@ -37,7 +28,7 @@ export function ConsoleSidebar() {
 
       <nav className="space-y-0.5">
         {NAV.map((n) => {
-          const on = path === n.href;
+          const on = path === n.href || path.startsWith(n.href + "/");
           return (
             <Link
               key={n.label}

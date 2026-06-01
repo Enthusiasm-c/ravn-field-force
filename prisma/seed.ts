@@ -364,12 +364,101 @@ async function main() {
     lines: [{ product: cueEsp, qty: 3 }],
   });
 
+  // ── Historical orders + visits (6 months) — the data behind the trends ──
+  const productsByBrand: Record<string, { id: string; pricePerUnit: number }[]> = {
+    Jägermeister: [jag700, jag1000, jagCold],
+    "José Cuervo": [cueEsp, cueTrad],
+  };
+  const repForArea = (area: string) =>
+    area === "Canggu" ? denis : area === "Seminyak" ? ari : area === "Ubud" ? niluh : wayan;
+
+  const months = [
+    new Date("2025-10-12T11:00:00+08:00"),
+    new Date("2025-11-12T11:00:00+08:00"),
+    new Date("2025-12-12T11:00:00+08:00"),
+    new Date("2026-01-12T11:00:00+08:00"),
+    new Date("2026-02-12T11:00:00+08:00"),
+    new Date("2026-03-12T11:00:00+08:00"),
+  ];
+  const trends: Record<string, number[]> = {
+    grow: [0.55, 0.68, 0.8, 0.9, 1.0, 1.15],
+    decline: [1.25, 1.12, 1.0, 0.85, 0.72, 0.6],
+    steady: [0.95, 1.02, 0.98, 1.05, 1.0, 1.03],
+    volatile: [0.7, 1.25, 0.6, 1.35, 0.85, 1.2],
+  };
+  const trendKeys = ["grow", "decline", "steady", "volatile"];
+  const baseUnitsFor = (t: OutletType) =>
+    t === "BEACH_CLUB" ? 18 : t === "CLUB" ? 14 : t === "BAR" ? 10 : 7;
+
+  const allOutlets = [
+    oldMans, finns, laLaguna, luigisHot, sariMade, potatoHead, luigis, laPlancha, ulekan,
+  ];
+
+  let histVisits = 0;
+  let histOrders = 0;
+  for (let idx = 0; idx < allOutlets.length; idx++) {
+    const o = allOutlets[idx];
+    const rep = repForArea(o.area);
+    const factors = trends[trendKeys[idx % 4]];
+    const base = baseUnitsFor(o.type);
+    const pool = o.brands.flatMap((b) => productsByBrand[b] ?? []);
+    if (pool.length === 0) continue;
+
+    for (let m = 0; m < months.length; m++) {
+      const date = months[m];
+      const units = Math.max(2, Math.round(base * factors[m]));
+      const lines =
+        pool.length >= 2
+          ? [
+              { product: pool[0], qty: Math.max(1, Math.ceil(units * 0.6)) },
+              { product: pool[1], qty: Math.max(1, Math.floor(units * 0.4)) },
+            ]
+          : [{ product: pool[0], qty: units }];
+
+      await makeOrder({
+        code: `ORD-3${idx}${m}`,
+        outletId: o.id,
+        repId: rep.id,
+        status: OrderStatus.CONFIRMED,
+        createdAt: date,
+        deliveryDate: new Date(date.getTime() + 86_400_000),
+        lines,
+      });
+      histOrders++;
+
+      await prisma.visit.create({
+        data: {
+          code: `VST-9${idx}${m}`,
+          outletId: o.id,
+          repId: rep.id,
+          checkInAt: date,
+          gpsDriftM: 6 + (m % 3) * 4,
+          gpsConfirmed: true,
+          photos: [
+            { label: "Shelf", taken: true },
+            { label: "Menu", taken: m % 2 === 0 },
+          ],
+          competitors: [
+            { brand: "Jägermeister", present: true },
+            { brand: "Johnnie Walker", present: m % 2 === 0 },
+          ],
+          notes:
+            m % 2 === 0
+              ? "Stock check done. Owner happy with rotation, restocked house pour."
+              : "Quick visit — discussed weekend promo and menu placement.",
+        },
+      });
+      histVisits++;
+    }
+  }
+
   console.log("Seeded:", {
     reps: 5,
     products: 5,
-    outlets: 10,
-    visits: 1,
-    orders: 10,
+    outlets: allOutlets.length,
+    visits: 1 + histVisits,
+    ordersToday: 10,
+    historicalOrders: histOrders,
   });
 }
 

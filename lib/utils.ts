@@ -36,3 +36,6 @@ export function freshness(last: Date | null): { label: string; stale: boolean } 
 
 /** Demo "now" — the proposal's frozen timestamp so the story always reads the same. */
 export const DEMO_NOW = new Date("2026-04-18T14:52:00+08:00");
+
+/** Start of the demo day — the order desk shows only today's queue. */
+export const DEMO_DAY_START = new Date("2026-04-18T00:00:00+08:00");

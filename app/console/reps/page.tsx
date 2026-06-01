@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { ConsoleTopbar } from "@/components/console-topbar";
-import { compactIDR } from "@/lib/utils";
+import { compactIDR, DEMO_DAY_START } from "@/lib/utils";
 import { LEADERBOARD } from "@/lib/demo";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,11 @@ export const dynamic = "force-dynamic";
 export default async function RepsPage() {
   const [reps, ordersByRep] = await Promise.all([
     prisma.rep.findMany(),
-    prisma.order.groupBy({ by: ["repId"], _count: true, _sum: { total: true } }),
+    prisma.order.groupBy({
+      by: ["repId"],
+      _count: true,
+      where: { createdAt: { gte: DEMO_DAY_START } },
+    }),
   ]);
 
   const liveOf = (id: string) => ordersByRep.find((o) => o.repId === id);
