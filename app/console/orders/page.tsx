@@ -88,7 +88,7 @@ export default async function OrdersPage({
 
       <div className="flex min-h-0 flex-1">
         {/* queue */}
-        <section className="flex min-w-0 flex-[1.5] flex-col border-r border-border">
+        <section className="flex min-w-0 flex-1 flex-col border-r border-border">
           {/* tabs */}
           <div className="flex items-center gap-2 px-6 pb-3 pt-4">
             {TABS.map((t) => {
@@ -191,7 +191,7 @@ export default async function OrdersPage({
         </section>
 
         {/* detail panel */}
-        <aside className="flex w-[420px] shrink-0 flex-col overflow-y-auto">
+        <aside className="flex w-[540px] shrink-0 flex-col overflow-y-auto">
           {focused ? (
             <div className="flex flex-1 flex-col p-5">
               <div className="flex items-center justify-between">
