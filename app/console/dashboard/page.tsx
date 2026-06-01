@@ -1,7 +1,8 @@
 import { ChevronDown, Download, MapPin } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { compactIDR, formatIDR, DEMO_NOW } from "@/lib/utils";
-import { HEADLINE, LEADERBOARD, FIELD_AREAS, DEMO_DATE_LABEL } from "@/lib/demo";
+import { compactIDR, formatIDR, DEMO_NOW, freshness } from "@/lib/utils";
+import { HEADLINE, LEADERBOARD, DEMO_DATE_LABEL, PIN } from "@/lib/demo";
+import { MapView } from "@/components/map/map-view";
 
 export const dynamic = "force-dynamic";
 
@@ -20,18 +21,35 @@ function hhmm(d: Date) {
 }
 
 export default async function DashboardPage() {
-  const [counts, recent] = await Promise.all([
+  const [counts, recent, outlets] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], _count: true }),
     prisma.order.findMany({
       orderBy: { createdAt: "desc" },
       take: 4,
       include: { outlet: true, rep: true },
     }),
+    prisma.outlet.findMany(),
   ]);
   const countOf = (s: string) => counts.find((c) => c.status === s)?._count ?? 0;
   const pending = countOf("NEW") + countOf("IN_DELIVERY");
   const newCount = countOf("NEW");
   const delivering = countOf("IN_DELIVERY");
+
+  const points = outlets.map((o) => {
+    const f = freshness(o.lastVisitAt);
+    const days = o.lastVisitAt
+      ? (DEMO_NOW.getTime() - o.lastVisitAt.getTime()) / 86_400_000
+      : Infinity;
+    const color = f.stale ? PIN.stale : days < 4 ? PIN.active : PIN.week;
+    return {
+      id: o.id,
+      lat: o.lat,
+      lng: o.lng,
+      label: o.name,
+      sublabel: o.area,
+      color,
+    };
+  });
 
   const filters = ["This week", "All Bali", "All reps (12)", "All SKUs"];
 
@@ -105,49 +123,10 @@ export default async function DashboardPage() {
                 <Legend color="var(--glow)" label="Stale · 30d+" />
               </div>
             </div>
-            <div
-              className="relative mt-4 h-[260px] overflow-hidden rounded-xl border border-border"
-              style={{
-                background:
-                  "radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, var(--ice) 8%, var(--bg)), var(--bg))",
-              }}
-            >
-              {/* grid lines */}
-              <div
-                className="absolute inset-0 opacity-[0.06]"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(var(--text) 1px, transparent 1px), linear-gradient(90deg, var(--text) 1px, transparent 1px)",
-                  backgroundSize: "40px 40px",
-                }}
-              />
-              {FIELD_AREAS.map((a) => {
-                const size = 10 + a.activeToday * 1.4;
-                const color = a.stale > 0 ? "var(--glow)" : a.activeToday > 6 ? "var(--ice)" : "var(--ok)";
-                return (
-                  <div
-                    key={a.area}
-                    className="absolute -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: `${a.x}%`, top: `${a.y}%` }}
-                  >
-                    <div
-                      className="rounded-full"
-                      style={{
-                        width: size,
-                        height: size,
-                        background: color,
-                        boxShadow: `0 0 ${size}px ${color}`,
-                        opacity: 0.85,
-                      }}
-                    />
-                    <span className="eyebrow absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap text-[8px]">
-                      {a.area}
-                    </span>
-                  </div>
-                );
-              })}
-              <span className="absolute bottom-2 right-3 text-[10px] text-faint">
-                156 pins · 42 active today · 3 stale
+            <div className="relative mt-4 h-[260px] overflow-hidden rounded-xl border border-border">
+              <MapView points={points} zoom={11} className="z-0" />
+              <span className="pointer-events-none absolute bottom-2 right-3 z-[400] rounded bg-surface/80 px-1.5 py-0.5 text-[10px] text-faint backdrop-blur">
+                {outlets.length} outlets · live coverage
               </span>
             </div>
           </div>

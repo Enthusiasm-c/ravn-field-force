@@ -27,6 +27,8 @@ export default async function VisitPage({
       code={visit.code}
       outletName={visit.outlet.name}
       outletArea={visit.outlet.area}
+      outletLat={visit.outlet.lat}
+      outletLng={visit.outlet.lng}
       checkIn={checkIn}
       gpsDriftM={visit.gpsDriftM}
       photos={visit.photos as { label: string; taken: boolean }[]}

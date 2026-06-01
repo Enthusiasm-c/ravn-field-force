@@ -32,6 +32,14 @@ export const FIELD_AREAS = [
   { area: "AMED", pins: 9, activeToday: 1, stale: 0, x: 86, y: 18 },
 ];
 
+// Resolved hex colors for map pins (Leaflet draws SVG, can't read CSS vars).
+export const PIN = {
+  active: "#1f6fd6", // visited recently — ice
+  week: "#1f9d59", // this week — ok green
+  stale: "#dd7a36", // 30d+ — alpenglow
+  rep: "#1f6fd6", // rep position
+} as const;
+
 export const STATUS_META = {
   NEW: { label: "New", color: "var(--ice)" },
   CONFIRMED: { label: "Confirmed", color: "var(--ok)" },

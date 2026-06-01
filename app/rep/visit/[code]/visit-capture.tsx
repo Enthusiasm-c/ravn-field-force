@@ -12,6 +12,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { PhoneFrame } from "@/components/phone-frame";
+import { MapView } from "@/components/map/map-view";
+import { PIN } from "@/lib/demo";
 
 type Photo = { label: string; taken: boolean };
 type Comp = { brand: string; present: boolean };
@@ -20,12 +22,17 @@ export function VisitCapture(props: {
   code: string;
   outletName: string;
   outletArea: string;
+  outletLat: number;
+  outletLng: number;
   checkIn: string;
   gpsDriftM: number;
   photos: Photo[];
   competitors: Comp[];
   notes: string;
 }) {
+  // Simulated on-site GPS: rep sits ~a few metres off the outlet pin.
+  const repLat = props.outletLat + 0.00006;
+  const repLng = props.outletLng + 0.00004;
   const [photos, setPhotos] = useState<Photo[]>(props.photos);
   const [comps, setComps] = useState<Comp[]>(props.competitors);
 
@@ -60,6 +67,28 @@ export function VisitCapture(props: {
                   {props.checkIn} · ±{props.gpsDriftM}m · {props.outletArea}
                 </p>
               </div>
+            </div>
+            {/* live GPS on a real map */}
+            <div className="relative mt-2 h-[150px] overflow-hidden rounded-xl border border-border">
+              <MapView
+                points={[
+                  {
+                    id: "rep",
+                    lat: repLat,
+                    lng: repLng,
+                    label: "You",
+                    sublabel: `±${props.gpsDriftM}m`,
+                    color: PIN.rep,
+                    radius: 6,
+                  },
+                ]}
+                accuracy={{ lat: repLat, lng: repLng, radiusM: props.gpsDriftM, color: PIN.rep }}
+                zoom={17}
+                className="z-0"
+              />
+              <span className="pointer-events-none absolute bottom-1.5 right-2 z-[400] rounded bg-surface/85 px-1.5 py-0.5 text-[9px] text-muted backdrop-blur">
+                {repLat.toFixed(4)}, {repLng.toFixed(4)}
+              </span>
             </div>
           </div>
 
