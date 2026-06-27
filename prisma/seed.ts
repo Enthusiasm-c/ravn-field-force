@@ -184,6 +184,18 @@ async function main() {
     })),
   });
 
+  // Look up any product by SKU — lets the desk orders below pull from the full
+  // 107-SKU book (not just the 5 hero SKUs) so every order reads differently.
+  const productRows = await prisma.product.findMany({
+    select: { id: true, sku: true, pricePerUnit: true },
+  });
+  const bySku = new Map(productRows.map((p) => [p.sku, p]));
+  const sku = (s: string) => {
+    const p = bySku.get(s);
+    if (!p) throw new Error(`seed: unknown SKU ${s}`);
+    return p;
+  };
+
   // ── Outlets (route of the day + dashboard coverage) ──
   const O = async (d: {
     name: string;
@@ -480,6 +492,57 @@ async function main() {
   };
 
   const tomorrowAM = new Date("2026-04-19T09:00:00+08:00");
+  const todayPM = new Date("2026-04-18T17:00:00+08:00"); // same-day express slot
+
+  // Desk order — a "today" order on the manager queue, each tied to its own
+  // visit (distinct objective / PIC / notes / photos) and pulling a realistic,
+  // outlet-appropriate basket from the full catalog, so no two read alike.
+  const makeDeskOrder = async (d: {
+    code: string;
+    visitCode: string;
+    outlet: { id: string; name: string };
+    rep: { id: string };
+    status: OrderStatus;
+    createdAt: Date;
+    checkInAt: Date;
+    deliveryDate: Date;
+    warehouseNote?: string;
+    lines: { sku: string; qty: number }[];
+    objective: string;
+    pic: string;
+    notes: string;
+    photoLabels: string[];
+    competitors: { brand: string; present: boolean }[];
+    gpsDriftM?: number;
+  }) => {
+    const visit = await prisma.visit.create({
+      data: {
+        code: d.visitCode,
+        outletId: d.outlet.id,
+        repId: d.rep.id,
+        checkInAt: d.checkInAt,
+        gpsDriftM: d.gpsDriftM ?? 8,
+        gpsConfirmed: true,
+        photos: d.photoLabels.map((label) => ({ label, taken: true })),
+        competitors: d.competitors,
+        notes: d.notes,
+        objective: d.objective,
+        pic: d.pic,
+      },
+    });
+    return makeOrder({
+      code: d.code,
+      outletId: d.outlet.id,
+      outletName: d.outlet.name,
+      repId: d.rep.id,
+      visitId: visit.id,
+      status: d.status,
+      createdAt: d.createdAt,
+      deliveryDate: d.deliveryDate,
+      warehouseNote: d.warehouseNote,
+      lines: d.lines.map((l) => ({ product: sku(l.sku), qty: l.qty })),
+    });
+  };
 
   // Hero order — tied to the hero visit, stays NEW so the confirm flow is live.
   await makeOrder({
@@ -498,116 +561,224 @@ async function main() {
     ],
   });
 
-  await makeOrder({
+  // La Laguna — sunset beach bar building a signature cocktail list.
+  await makeDeskOrder({
     code: "ORD-4420",
-    outletId: laLaguna.id,
-    outletName: laLaguna.name,
-    repId: denis.id,
+    visitCode: "VST-8841",
+    outlet: laLaguna,
+    rep: denis,
     status: OrderStatus.NEW,
     createdAt: at(14, 32),
+    checkInAt: at(14, 12),
     deliveryDate: tomorrowAM,
+    warehouseNote: "Deliver before 4pm — bar opens at sunset.",
     lines: [
-      { product: jag1000, qty: 6 },
-      { product: jag700, qty: 6 },
+      { sku: "JAG-700", qty: 8 },
+      { sku: "TAN-LD", qty: 4 },
+      { sku: "BAC-BLA", qty: 6 },
+      { sku: "BIN-620", qty: 24 },
+    ],
+    objective: "Suggest Program & Promo",
+    pic: "Komang",
+    notes:
+      "Building a signature sunset cocktail list — added gin and white rum. Wants a Jäger shot-bucket promo for Friday live music.",
+    photoLabels: ["Bar", "Drinks", "Menu"],
+    competitors: [
+      { brand: "Bombay Sapphire", present: true },
+      { brand: "Jägermeister", present: true },
     ],
   });
 
-  await makeOrder({
+  // Ulekan — Indonesian fine-dining, negotiating a house-pour listing.
+  await makeDeskOrder({
     code: "ORD-4419",
-    outletId: ulekan.id,
-    outletName: ulekan.name,
-    repId: niluh.id,
+    visitCode: "VST-8840",
+    outlet: ulekan,
+    rep: niluh,
     status: OrderStatus.NEW,
     createdAt: at(14, 5),
+    checkInAt: at(13, 48),
     deliveryDate: tomorrowAM,
     lines: [
-      { product: cueEsp, qty: 6 },
-      { product: cueTrad, qty: 3 },
+      { sku: "CUE-ESP", qty: 6 },
+      { sku: "APE-700", qty: 4 },
+      { sku: "HAT-TUN", qty: 6 },
+      { sku: "2IS-SB", qty: 6 },
+    ],
+    objective: "Listing & House Pouring Deal",
+    pic: "Dewa",
+    notes:
+      "Negotiating a house-pour listing — added local Hatten sparkling and a sauvignon for the tasting menu. Aperol spritz selling well at lunch.",
+    photoLabels: ["Menu", "Shelf"],
+    competitors: [
+      { brand: "Campari", present: true },
+      { brand: "José Cuervo", present: true },
     ],
   });
 
-  await makeOrder({
+  // Finns — high-volume beach club prepping a Saturday DJ event.
+  await makeDeskOrder({
     code: "ORD-4418",
-    outletId: finns.id,
-    outletName: finns.name,
-    repId: ari.id,
+    visitCode: "VST-8839",
+    outlet: finns,
+    rep: ari,
     status: OrderStatus.CONFIRMED,
     createdAt: at(13, 54),
+    checkInAt: at(13, 30),
     deliveryDate: tomorrowAM,
+    warehouseNote: "Pallet delivery — service entrance, contact ops at 8am.",
     lines: [
-      { product: jag700, qty: 20 },
-      { product: jag1000, qty: 10 },
-      { product: cueEsp, qty: 10 },
+      { sku: "JAG-700", qty: 24 },
+      { sku: "GG-700", qty: 12 },
+      { sku: "PAT-SIL", qty: 6 },
+      { sku: "COR-330", qty: 48 },
+      { sku: "HAT-JEP", qty: 12 },
     ],
+    objective: "Event & Activation",
+    pic: "Putu",
+    notes:
+      "Prepping Saturday DJ event — bulk shots plus premium spirits for VIP cabanas. Confirmed an ice-cold Jäger tap activation at the main bar.",
+    photoLabels: ["Bar", "Promo", "Drinks"],
+    competitors: [
+      { brand: "Grey Goose", present: true },
+      { brand: "Jägermeister", present: true },
+    ],
+    gpsDriftM: 12,
   });
 
-  await makeOrder({
+  // Potato Head — iconic beach club, restock after the weekend.
+  await makeDeskOrder({
     code: "ORD-4417",
-    outletId: potatoHead.id,
-    outletName: potatoHead.name,
-    repId: ari.id,
+    visitCode: "VST-8838",
+    outlet: potatoHead,
+    rep: ari,
     status: OrderStatus.IN_DELIVERY,
     createdAt: at(13, 22),
-    deliveryDate: tomorrowAM,
+    checkInAt: at(13, 2),
+    deliveryDate: todayPM,
+    warehouseNote: "Express — already on the truck.",
     lines: [
-      { product: jag700, qty: 15 },
-      { product: cueTrad, qty: 6 },
-      { product: jagCold, qty: 6 },
+      { sku: "JAG-CB7", qty: 12 },
+      { sku: "CUE-TRD", qty: 6 },
+      { sku: "HEN-GIN", qty: 6 },
+      { sku: "HEI-330", qty: 48 },
+    ],
+    objective: "Check Stock & Visibility",
+    pic: "Made",
+    notes:
+      "Restock after the weekend rush — Cold Brew moving fast at the day bar. Added Hendrick's for the botanical list. Strong Jäger visibility on backbar.",
+    photoLabels: ["Shelf", "Bar", "Menu"],
+    competitors: [
+      { brand: "Tanqueray", present: true },
+      { brand: "Jägermeister", present: true },
     ],
   });
 
-  await makeOrder({
+  // Sari Made — small local bar, routine restock.
+  await makeDeskOrder({
     code: "ORD-4415",
-    outletId: sariMade.id,
-    outletName: sariMade.name,
-    repId: budi.id,
+    visitCode: "VST-8837",
+    outlet: sariMade,
+    rep: budi,
     status: OrderStatus.CONFIRMED,
     createdAt: at(12, 48),
+    checkInAt: at(12, 30),
     deliveryDate: tomorrowAM,
     lines: [
-      { product: jag700, qty: 6 },
-      { product: jag1000, qty: 1 },
+      { sku: "JAG-700", qty: 6 },
+      { sku: "SMI-RED", qty: 6 },
+      { sku: "BIN-620", qty: 24 },
+    ],
+    objective: "Regular Visit",
+    pic: "Kadek",
+    notes:
+      "Routine restock for the local crowd — house vodka and beer steady. Reminded them about the upcoming Jäger POS materials.",
+    photoLabels: ["Shelf", "Drinks"],
+    competitors: [
+      { brand: "Smirnoff", present: true },
+      { brand: "Jägermeister", present: true },
     ],
   });
 
-  await makeOrder({
+  // La Plancha — colourful beanbag beach bar, sunset tasting.
+  await makeDeskOrder({
     code: "ORD-4412",
-    outletId: laPlancha.id,
-    outletName: laPlancha.name,
-    repId: ari.id,
+    visitCode: "VST-8836",
+    outlet: laPlancha,
+    rep: ari,
     status: OrderStatus.IN_DELIVERY,
     createdAt: at(11, 30),
-    deliveryDate: tomorrowAM,
+    checkInAt: at(11, 8),
+    deliveryDate: todayPM,
+    warehouseNote: "Delivery in progress — driver Wayan.",
     lines: [
-      { product: jag700, qty: 24 },
-      { product: jag1000, qty: 10 },
-      { product: cueEsp, qty: 10 },
+      { sku: "JAG-700", qty: 16 },
+      { sku: "MAL-700", qty: 8 },
+      { sku: "COR-330", qty: 48 },
+    ],
+    objective: "Tasting & Sampling",
+    pic: "Agus",
+    notes:
+      "Ran a sunset tasting — coconut rum and Jäger cocktails landed well with the beanbag crowd. Big beer pull expected for the weekend.",
+    photoLabels: ["Bar", "Promo"],
+    competitors: [
+      { brand: "Bacardi", present: true },
+      { brand: "Jägermeister", present: true },
     ],
   });
 
-  await makeOrder({
+  // Ulekan again — earlier, confirmed order: a premium top-shelf push.
+  await makeDeskOrder({
     code: "ORD-4409",
-    outletId: ulekan.id,
-    outletName: ulekan.name,
-    repId: niluh.id,
+    visitCode: "VST-8835",
+    outlet: ulekan,
+    rep: niluh,
     status: OrderStatus.CONFIRMED,
     createdAt: at(10, 14),
+    checkInAt: at(9, 55),
     deliveryDate: tomorrowAM,
     lines: [
-      { product: cueEsp, qty: 9 },
-      { product: cueTrad, qty: 3 },
+      { sku: "CUE-ESP", qty: 9 },
+      { sku: "DJ-BLA", qty: 3 },
+      { sku: "COI-700", qty: 3 },
+      { sku: "PLG-RED", qty: 6 },
+    ],
+    objective: "Follow Up",
+    pic: "Dewa",
+    notes:
+      "Follow-up on the premium margarita program — upsold Don Julio and Cointreau for the top-shelf list, plus a red for the new dinner pairing.",
+    photoLabels: ["Menu", "Promo"],
+    competitors: [
+      { brand: "Don Julio", present: false },
+      { brand: "José Cuervo", present: true },
     ],
   });
 
-  await makeOrder({
+  // Luigi's (Ubud) — Italian restaurant, order held on credit.
+  await makeDeskOrder({
     code: "ORD-4405",
-    outletId: luigis.id,
-    outletName: luigis.name,
-    repId: niluh.id,
+    visitCode: "VST-8834",
+    outlet: luigis,
+    rep: niluh,
     status: OrderStatus.REJECTED,
     createdAt: at(9, 40),
+    checkInAt: at(9, 20),
     deliveryDate: tomorrowAM,
-    lines: [{ product: cueEsp, qty: 3 }],
+    warehouseNote: "On hold — credit check, returned to rep.",
+    lines: [
+      { sku: "CUE-ESP", qty: 3 },
+      { sku: "CAM-700", qty: 3 },
+      { sku: "JCK-SHZ", qty: 6 },
+    ],
+    objective: "Suggest Program & Promo",
+    pic: "Gede",
+    notes:
+      "Pitched a negroni & amaro program for the bar. Order put on hold — outstanding balance to clear before the next delivery.",
+    photoLabels: ["Shelf", "Menu"],
+    competitors: [
+      { brand: "Campari", present: true },
+      { brand: "José Cuervo", present: true },
+    ],
   });
 
   // ── Historical orders + visits (6 months) — the data behind the trends ──
@@ -746,8 +917,8 @@ async function main() {
     reps: 5,
     products: 5 + CATALOG.length,
     outlets: allOutlets.length,
-    visits: 1 + histVisits,
-    ordersToday: 10,
+    visits: 9 + histVisits, // hero + 8 desk visits + history
+    ordersToday: 9,
     historicalOrders: histOrders,
     priceBookRows: priceBook.size,
   });

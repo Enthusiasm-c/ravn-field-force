@@ -23,6 +23,12 @@ function hhmm(d: Date) {
     timeZone: "Asia/Makassar",
   }).format(d);
 }
+const deliveryFmt = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "2-digit",
+  month: "short",
+  timeZone: "Asia/Makassar",
+});
 
 export default async function OrdersPage({
   searchParams,
@@ -158,7 +164,7 @@ export default async function OrdersPage({
               <OrderPanel
                 orderId={focused.id}
                 status={focused.status}
-                deliveryLabel="Sat 19 Apr"
+                deliveryLabel={deliveryFmt.format(focused.deliveryDate)}
                 initialLines={focused.lines.map((l) => ({
                   id: l.id,
                   name: l.product.name,
