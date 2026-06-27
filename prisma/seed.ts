@@ -684,11 +684,11 @@ async function main() {
     deliveryDate: tomorrowAM,
     warehouseNote: "Pallet delivery — service entrance, contact ops at 8am.",
     lines: [
-      { sku: "JAG-700", qty: 24 },
       { sku: "GG-700", qty: 12 },
       { sku: "PAT-SIL", qty: 6 },
       { sku: "COR-330", qty: 48 },
       { sku: "HAT-JEP", qty: 12 },
+      { sku: "JAG-700", qty: 8 },
     ],
     objective: "Event & Activation",
     pic: "Putu",
@@ -768,9 +768,9 @@ async function main() {
     deliveryDate: todayPM,
     warehouseNote: "Delivery in progress — driver Wayan.",
     lines: [
-      { sku: "JAG-700", qty: 16 },
       { sku: "MAL-700", qty: 8 },
       { sku: "COR-330", qty: 48 },
+      { sku: "JAG-700", qty: 6 },
     ],
     objective: "Tasting & Sampling",
     pic: "Agus",
@@ -838,10 +838,6 @@ async function main() {
   });
 
   // ── Historical orders + visits (6 months) — the data behind the trends ──
-  const productsByBrand: Record<string, { id: string; pricePerUnit: number }[]> = {
-    Jägermeister: [jag700, jag1000, jagCold],
-    "José Cuervo": [cueEsp, cueTrad],
-  };
   const repForArea = (area: string) =>
     area === "Canggu" ? denis : area === "Seminyak" ? ari : area === "Ubud" ? niluh : wayan;
 
@@ -880,6 +876,49 @@ async function main() {
     ...extraOutlets,
   ];
 
+  // Diverse per-outlet purchase profile drawn from the full book, weighted by
+  // venue type — so "top purchases" read differently per outlet instead of every
+  // venue showing Jägermeister on top. Focus brands still appear, just not as the
+  // lead line. The hero (Old Man's) keeps its Jäger/Cuervo story intact.
+  const CAT: Record<string, string[]> = {
+    whisky: ["JWR-700", "JWB-700", "JD-N7", "JAM-700", "CHV-12", "BAL-FIN", "GLF-12", "MKS-700", "DWR-WL", "JB-WHT"],
+    vodka: ["ABS-BLU", "SMI-RED", "GG-700", "KTL-700", "STO-700", "SKY-700", "ABS-CIT"],
+    gin: ["BOM-SAP", "TAN-LD", "HEN-GIN", "GOR-700", "BEF-700", "ROK-700"],
+    rum: ["BAC-BLA", "BAC-ORO", "CPM-SPG", "HAV-3", "HAV-7", "MAL-700", "KRK-700"],
+    tequila: ["CUE-ESP", "CUE-TRD", "DJ-BLA", "OLM-BLA", "OLM-ALT", "ESP-BLA", "T1800-REP"],
+    liqueur: ["BAI-700", "COI-700", "APE-700", "CAM-700", "KAH-700", "DIS-700", "MID-700", "STG-700", "PIM-700"],
+    beer: ["BIN-620", "HEI-330", "COR-330", "STE-330", "SAN-330", "GUI-320", "ANK-620"],
+    wine: ["HAT-AGA", "HAT-TUN", "HAT-JEP", "SAB-WV", "PLG-RED", "2IS-SB", "JCK-SHZ", "WB-YL", "HRD-CHD"],
+    cognac: ["HNS-VS", "MAR-VSOP", "REM-VSOP", "MAN-HSE"],
+  };
+  const TYPE_CATS: Record<OutletType, string[]> = {
+    BEACH_CLUB: ["vodka", "tequila", "beer", "wine", "gin", "liqueur"],
+    CLUB: ["vodka", "tequila", "whisky", "liqueur", "rum", "beer"],
+    BAR: ["gin", "rum", "whisky", "beer", "vodka", "liqueur"],
+    RESTAURANT: ["wine", "tequila", "liqueur", "cognac", "gin", "whisky"],
+  };
+  const pickCat = (name: string, cat: string) =>
+    CAT[cat][strHash(name + "·" + cat) % CAT[cat].length];
+  const buildBasket = (o: { name: string; type: OutletType; brands: string[] }) => {
+    const cats = TYPE_CATS[o.type];
+    const rot = strHash(o.name + "·rot") % cats.length;
+    const skus: string[] = [];
+    for (let k = 0; k < 4; k++) {
+      const s = pickCat(o.name, cats[(rot + k) % cats.length]);
+      if (!skus.includes(s)) skus.push(s);
+    }
+    // Focus brands present, but seated mid-basket — never the lead line.
+    if (o.brands.includes("José Cuervo")) {
+      const cs = strHash(o.name) % 2 === 0 ? "CUE-ESP" : "CUE-TRD";
+      if (!skus.includes(cs)) skus.splice(1, 0, cs);
+    }
+    if (o.brands.includes("Jägermeister")) {
+      const js = ["JAG-700", "JAG-1000", "JAG-CB7"][strHash(o.name + "·jag") % 3];
+      if (!skus.includes(js)) skus.splice(Math.min(2, skus.length), 0, js);
+    }
+    return skus.map((s) => sku(s));
+  };
+
   // Build all history operations, then run them in bounded chunks (fast + safe
   // on a pooled connection).
   const thunks: (() => Promise<unknown>)[] = [];
@@ -895,19 +934,28 @@ async function main() {
     const rep = repForArea(o.area);
     const factors = trends[trendKeys[idx % 4]];
     const base = baseUnitsFor(o.type);
-    const pool = o.brands.flatMap((b) => productsByBrand[b] ?? []);
-    if (pool.length === 0) continue;
+    // Hero keeps the Jäger/Cuervo story; everyone else gets a diverse basket.
+    const basket =
+      o.id === oldMans.id
+        ? [jag700, jag1000, cueEsp, jagCold, cueTrad]
+        : buildBasket(o);
+    if (basket.length === 0) continue;
+    const off = Math.max(1, Math.floor(basket.length / 2));
 
     for (let m = 0; m < months.length; m++) {
       const date = months[m];
       const units = Math.max(2, Math.round(base * factors[m]));
+      // Rotate the lead line through the basket each month so volume spreads
+      // across SKUs — no single product dominates the outlet's history.
+      const a = basket[m % basket.length];
+      const b = basket[(m + off) % basket.length];
       const lines =
-        pool.length >= 2
+        basket.length >= 2
           ? [
-              { product: pool[0], qty: Math.max(1, Math.ceil(units * 0.6)) },
-              { product: pool[1], qty: Math.max(1, Math.floor(units * 0.4)) },
+              { product: a, qty: Math.max(1, Math.ceil(units * 0.6)) },
+              { product: b, qty: Math.max(1, Math.floor(units * 0.4)) },
             ]
-          : [{ product: pool[0], qty: units }];
+          : [{ product: a, qty: units }];
 
       for (const l of lines) {
         priceBook.set(`${o.id}:${l.product.id}`, {
