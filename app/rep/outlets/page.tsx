@@ -43,7 +43,7 @@ export default async function OutletsPage() {
 
   return (
     <PhoneFrame>
-      <div className="flex h-[calc(844px-44px)] flex-col">
+      <div className="flex h-[800px] flex-col">
         {/* header */}
         <header className="px-5 pb-1 pt-4">
           <div className="flex items-end justify-between">

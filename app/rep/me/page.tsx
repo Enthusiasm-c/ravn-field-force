@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default function RepMePage() {
   return (
     <PhoneFrame>
-      <div className="flex h-[calc(844px-44px)] flex-col">
+      <div className="flex h-[800px] flex-col">
         <header className="px-5 pb-1 pt-4">
           <p className="eyebrow">Profile</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Me</h1>

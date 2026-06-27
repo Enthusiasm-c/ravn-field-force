@@ -263,7 +263,7 @@ export default async function RepOutletCard({
 
   return (
     <PhoneFrame>
-      <div className="flex min-h-[calc(844px-44px)] flex-col">
+      <div className="flex min-h-[800px] flex-col">
         <header className="flex items-center justify-between px-4 pb-1 pt-3">
           <Link
             href="/rep/outlets"
