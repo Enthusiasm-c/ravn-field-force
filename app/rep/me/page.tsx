@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bell, Globe, HelpCircle, LogOut, ChevronRight } from "lucide-react";
 import { PhoneFrame } from "@/components/phone-frame";
 import { RepNav } from "@/components/rep-nav";
@@ -9,6 +10,13 @@ export default function RepMePage() {
     <PhoneFrame>
       <div className="flex h-[100dvh] lg:h-[800px] flex-col">
         <header className="px-5 pb-1 pt-4">
+          <Link
+            href="/"
+            aria-label="Home"
+            className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong bg-surface"
+          >
+            <span className="serif text-base leading-none text-ice">R</span>
+          </Link>
           <p className="eyebrow">Profile</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">Me</h1>
         </header>

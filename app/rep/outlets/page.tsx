@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { PhoneFrame } from "@/components/phone-frame";
 import { RepNav } from "@/components/rep-nav";
@@ -46,6 +47,13 @@ export default async function OutletsPage() {
       <div className="flex h-[100dvh] lg:h-[800px] flex-col">
         {/* header */}
         <header className="px-5 pb-1 pt-4">
+          <Link
+            href="/"
+            aria-label="Home"
+            className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong bg-surface"
+          >
+            <span className="serif text-base leading-none text-ice">R</span>
+          </Link>
           <div className="flex items-end justify-between">
             <div>
               <p className="eyebrow">Route DPS-04 · Canggu</p>

@@ -1,4 +1,3 @@
-import { SurfaceSwitcher } from "@/components/surface-switcher";
 import { PhoneStage } from "@/components/phone-stage";
 
 export default function RepLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +14,6 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
       <div className="relative flex min-h-dvh justify-center lg:items-center">
         <PhoneStage>{children}</PhoneStage>
       </div>
-      <SurfaceSwitcher placement="corner" />
     </div>
   );
 }
