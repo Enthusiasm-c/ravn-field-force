@@ -8,15 +8,51 @@ const at = (h: number, m: number) =>
   new Date(`2026-04-18T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`);
 const daysAgo = (d: number) => new Date(NOW.getTime() - d * 86_400_000);
 
+// Stable hash from a string — keeps every generated field (price, contact,
+// address) deterministic across reseeds.
+function strHash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
 // Each outlet negotiates its own conditions vs list. Deterministic (hashed from
 // the outlet name) so reseeds are stable and the price book stays consistent.
-function priceFactor(name: string): number {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return 0.85 + (h % 18) / 100; // 0.85 .. 1.02 of list
-}
+const priceFactor = (name: string) => 0.85 + (strHash(name) % 18) / 100; // 0.85 .. 1.02
 const negotiated = (name: string, list: number) =>
   Math.round((list * priceFactor(name)) / 5_000) * 5_000;
+
+// ── Fake-but-believable outlet contacts + addresses ──
+// Bali F&B decision-makers are a mix of local owners/managers and expat operators.
+const CONTACT_NAMES = [
+  "Wayan Surya", "Made Antari", "Komang Aditya", "Kadek Prabowo",
+  "Putu Andika", "Nyoman Wirya", "Gusti Ngurah", "Dewa Putra",
+  "Ketut Sukerta", "Ayu Lestari", "Sari Kusuma", "Dewi Anggraini",
+  "Ni Luh Ratna", "Gede Mahendra", "Agus Suparta", "Eka Pratiwi",
+  "Mark Davies", "Tom Whitfield", "Luca Romano", "Sophie Martin",
+  "Daniel Brooks", "Jolie Tanaka", "Rizki Hartono", "Sinta Maharani",
+];
+const PHONE_PREFIX = ["811", "812", "813", "821", "822", "823", "851", "852", "878", "896"];
+const STREETS: Record<string, string[]> = {
+  Canggu: ["Jl. Batu Bolong", "Jl. Pantai Berawa", "Jl. Pererenan", "Jl. Nelayan", "Jl. Munduk Catu", "Jl. Pantai Batu Mejan"],
+  Seminyak: ["Jl. Kayu Aya", "Jl. Petitenget", "Jl. Camplung Tanduk", "Jl. Kayu Jati", "Jl. Drupadi", "Jl. Sarinande"],
+  "Kuta Selatan": ["Jl. Labuansait", "Jl. Pantai Suluban", "Jl. Melasti", "Jl. Pantai Balangan", "Jl. Pantai Pandawa", "Jl. Goa Lempeh"],
+  Ubud: ["Jl. Raya Ubud", "Jl. Monkey Forest", "Jl. Hanoman", "Jl. Dewi Sita", "Jl. Goutama", "Jl. Sweta"],
+  Sanur: ["Jl. Danau Tamblingan", "Jl. Pantai Sindhu", "Jl. Cemara", "Jl. Duyung", "Jl. Bypass Ngurah Rai"],
+  Amed: ["Jl. Raya Amed", "Jl. I Ketut Natih", "Jl. Pantai Jemeluk"],
+};
+const venueContact = (name: string) => CONTACT_NAMES[strHash(name + "·pic") % CONTACT_NAMES.length];
+const venuePhone = (name: string) => {
+  const h = strHash(name + "·tel");
+  const a = String(h % 10000).padStart(4, "0");
+  const b = String(Math.floor(h / 11) % 10000).padStart(4, "0");
+  return `+62 ${PHONE_PREFIX[h % PHONE_PREFIX.length]}-${a}-${b}`;
+};
+const venueAddress = (name: string, area: string) => {
+  const list = STREETS[area] ?? [`Jl. Raya ${area}`];
+  const h = strHash(name + "·addr");
+  return `${list[h % list.length]} No. ${1 + (h % 180)}, ${area}`;
+};
 
 async function main() {
   // Wipe (idempotent reseed)
@@ -420,6 +456,26 @@ async function main() {
       })
     );
   }
+
+  // ── Enrich every outlet with a believable decision-maker + phone, and a
+  //    real street address (coverage venues were seeded "Area, Bali"). Keeps any
+  //    hand-set contact (Old Man's → Javier); replaces masked/placeholder ones.
+  const bareOutlets = await prisma.outlet.findMany();
+  await Promise.all(
+    bareOutlets.map((o) =>
+      prisma.outlet.update({
+        where: { id: o.id },
+        data: {
+          contactName: o.contactName ?? venueContact(o.name),
+          contactPhone:
+            o.contactPhone && !o.contactPhone.includes("X")
+              ? o.contactPhone
+              : venuePhone(o.name),
+          address: o.address.endsWith(", Bali") ? venueAddress(o.name, o.area) : o.address,
+        },
+      })
+    )
+  );
 
   // ── Hero visit: VST-8842 at Old Man's ─────────────────
   const heroVisit = await prisma.visit.create({
