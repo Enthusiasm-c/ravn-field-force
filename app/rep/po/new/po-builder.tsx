@@ -3,11 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, X, Minus, Plus, ArrowRight, Link2 } from "lucide-react";
+import { ChevronLeft, X, Minus, Plus, ArrowRight, Link2, History } from "lucide-react";
 import { PhoneFrame } from "@/components/phone-frame";
 import { formatIDR } from "@/lib/utils";
 
-type Line = { id: string; name: string; sku: string; price: number; qty: number };
+type Line = {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  listPrice: number;
+  isRemembered: boolean;
+  qty: number;
+};
 
 export function PoBuilder(props: {
   orderCode: string;
@@ -43,7 +51,7 @@ export function PoBuilder(props: {
             className="flex items-center gap-1 text-[13px] text-muted"
           >
             <ChevronLeft className="h-4 w-4" />
-            New PO
+            New Order
           </Link>
           <Link href="/rep/outlets" className="text-muted">
             <X className="h-5 w-5" />
@@ -68,6 +76,21 @@ export function PoBuilder(props: {
                   <p className="eyebrow mt-1">
                     {l.sku} · IDR {formatIDR(l.price)}/btl
                   </p>
+                  {l.isRemembered ? (
+                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-ice/10 px-2 py-0.5 text-[10px] font-medium text-ice">
+                      <History className="h-2.5 w-2.5" />
+                      Last agreed price
+                      {l.listPrice !== l.price && (
+                        <span className="text-ice/60">
+                          · list {formatIDR(l.listPrice)}
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="mt-1.5 inline-block text-[10px] text-faint">
+                      List price · first order
+                    </span>
+                  )}
                 </div>
                 <span className="tabular text-[14px] font-medium text-text">
                   {formatIDR(l.price * l.qty)}
@@ -91,7 +114,7 @@ export function PoBuilder(props: {
             </div>
           ))}
           <button className="flex w-full items-center justify-center gap-1 rounded-xl border border-dashed border-border-strong py-3 text-[12px] text-muted">
-            <Plus className="h-3.5 w-3.5" /> Add line item
+            <Plus className="h-3.5 w-3.5" /> Add product
           </button>
         </div>
 
@@ -120,7 +143,7 @@ export function PoBuilder(props: {
           >
             {sent ? "Sent to office ✓" : (
               <>
-                Send PO <ArrowRight className="h-4 w-4" />
+                Send Order <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>

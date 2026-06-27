@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 /** iOS-ish device frame — 390×844, the canvas the rep screens are designed for. */
 export function PhoneFrame({
   children,
-  statusTime = "14:32",
+  statusTime = "14:52",
   className,
 }: {
   children: React.ReactNode;

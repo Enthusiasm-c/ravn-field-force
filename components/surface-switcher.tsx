@@ -6,15 +6,22 @@ import { cn } from "@/lib/utils";
 
 const SURFACES = [
   { href: "/rep/outlets", label: "Rep", sub: "Mobile" },
-  { href: "/console/orders", label: "Manager", sub: "Order desk" },
-  { href: "/console/dashboard", label: "Director", sub: "Dashboard" },
+  { href: "/console/dashboard", label: "Manager", sub: "Overview" },
 ];
 
-/** Floating demo control — jump between the three viewpoints. */
-export function SurfaceSwitcher() {
+/** Floating demo control — jump between the viewpoints. */
+export function SurfaceSwitcher({
+  placement = "center",
+}: {
+  placement?: "center" | "corner";
+}) {
   const path = usePathname();
+  const pos =
+    placement === "corner"
+      ? "bottom-4 right-4"
+      : "bottom-4 right-4 lg:left-1/2 lg:right-auto lg:-translate-x-1/2";
   return (
-    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+    <div className={`fixed z-50 ${pos}`}>
       <div className="glass flex items-center gap-1 rounded-full border border-border-strong p-1 shadow-2xl">
         <Link
           href="/"
@@ -26,6 +33,7 @@ export function SurfaceSwitcher() {
         {SURFACES.map((s) => {
           const active =
             (s.href.startsWith("/rep") && path.startsWith("/rep")) ||
+            (s.href.startsWith("/console") && path.startsWith("/console")) ||
             path === s.href;
           return (
             <Link

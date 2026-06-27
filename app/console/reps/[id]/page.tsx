@@ -92,9 +92,9 @@ export default async function RepDetailPage({
       <ConsoleTopbar
         title="Rep"
         subtitle="Performance · activity · sales"
-        initials="BH"
-        name="Bayu Hartono"
-        role="Commercial Director"
+        initials="SW"
+        name="Siti Wulandari"
+        role="Sales Manager · Bali"
       />
 
       <div className="px-6 py-5">

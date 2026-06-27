@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { prisma } from "@/lib/db";
+import { ConsoleOrderQueue } from "@/components/console-order-queue";
 import { OrderStatus } from "@prisma/client";
 import { formatIDR, DEMO_DAY_START } from "@/lib/utils";
 import { STATUS_META, OUTLET_TYPE_LABEL } from "@/lib/demo";
@@ -46,6 +46,17 @@ export default async function OrdersPage({
     counts.find((c) => c.status === s)?._count ?? 0;
   const total = counts.reduce((a, c) => a + c._count, 0);
 
+  const rows = orders.map((o) => ({
+    id: o.id,
+    code: o.code,
+    outlet: o.outlet.name,
+    rep: o.rep.initials,
+    total: formatIDR(o.total),
+    statusLabel: STATUS_META[o.status].label,
+    statusColor: STATUS_META[o.status].color,
+    time: hhmm(o.createdAt),
+  }));
+
   const focusCode = sp.focus ?? orders[0]?.code;
   const focused = focusCode
     ? await prisma.order.findUnique({
@@ -86,9 +97,9 @@ export default async function OrdersPage({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* queue */}
-        <section className="flex min-w-0 flex-1 flex-col border-r border-border">
+        <section className="flex min-w-0 flex-1 flex-col border-border lg:border-r">
           {/* tabs */}
           <div className="flex items-center gap-2 px-6 pb-3 pt-4">
             {TABS.map((t) => {
@@ -111,87 +122,12 @@ export default async function OrdersPage({
             })}
           </div>
 
-          {/* search */}
-          <div className="px-6 pb-2">
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2">
-              <Search className="h-3.5 w-3.5 text-faint" />
-              <span className="text-[12px] text-faint">Search order #, outlet, or rep</span>
-            </div>
-          </div>
-
-          {/* table */}
-          <div className="min-h-0 flex-1 overflow-y-auto px-3">
-            <table className="w-full border-collapse">
-              <thead className="sticky top-0 bg-bg">
-                <tr className="eyebrow text-left">
-                  <th className="px-3 py-2 font-normal">Order #</th>
-                  <th className="px-3 py-2 font-normal">Outlet</th>
-                  <th className="px-3 py-2 font-normal">Rep</th>
-                  <th className="px-3 py-2 text-right font-normal">Total IDR</th>
-                  <th className="px-3 py-2 font-normal">Status</th>
-                  <th className="px-3 py-2 text-right font-normal">Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((o) => {
-                  const meta = STATUS_META[o.status];
-                  const on = o.code === focusCode;
-                  return (
-                    <tr
-                      key={o.id}
-                      className={`group cursor-pointer border-t border-border/60 ${
-                        on ? "bg-ice/5" : "hover:bg-surface/60"
-                      }`}
-                    >
-                      <td className="px-3 py-2.5">
-                        <Link
-                          href={`/console/orders?status=${tab.key}&focus=${o.code}`}
-                          className="tabular block text-[12px] font-medium text-text"
-                        >
-                          #{o.code}
-                        </Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-[12px]">{o.outlet.name}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-muted">{o.rep.initials}</td>
-                      <td className="tabular px-3 py-2.5 text-right text-[12px]">
-                        {formatIDR(o.total)}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span
-                          className="inline-flex items-center gap-1.5 text-[11px]"
-                          style={{ color: meta.color }}
-                        >
-                          <span
-                            className="h-1.5 w-1.5 rounded-full"
-                            style={{ background: meta.color }}
-                          />
-                          {meta.label}
-                        </span>
-                      </td>
-                      <td className="tabular px-3 py-2.5 text-right text-[11px] text-faint">
-                        {hhmm(o.createdAt)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* footer stats */}
-          <div className="flex items-center gap-6 border-t border-border px-6 py-3 text-[11px]">
-            <span className="text-muted">
-              Today <span className="text-text">{total} orders</span>
-            </span>
-            <span className="text-muted">
-              Median confirm <span className="text-text">4m 18s</span>
-            </span>
-            <span className="ml-auto text-faint">RAVN · v0.7 · PAN prod</span>
-          </div>
+          {/* search + table (client-filtered) */}
+          <ConsoleOrderQueue rows={rows} tab={tab.key} focusCode={focusCode} />
         </section>
 
         {/* detail panel */}
-        <aside className="flex w-[540px] shrink-0 flex-col overflow-y-auto">
+        <aside className="flex w-full shrink-0 flex-col overflow-y-auto border-t border-border lg:w-[540px] lg:border-t-0">
           {focused ? (
             <div className="flex flex-1 flex-col p-5">
               <div className="flex items-center justify-between">
@@ -227,7 +163,7 @@ export default async function OrdersPage({
                   id: l.id,
                   name: l.product.name,
                   sku: l.product.sku,
-                  price: l.product.pricePerUnit,
+                  price: l.unitPrice,
                   qty: l.qty,
                 }))}
                 visit={
@@ -236,15 +172,11 @@ export default async function OrdersPage({
                         photos,
                         notes: visit.notes,
                         address: focused.outlet.address,
-                        distanceKm: focused.outlet.distanceKm,
                       }
                     : null
                 }
               />
 
-              <p className="mt-auto pt-5 text-[10px] text-faint">
-                04 / 05 · Order queue · synced live
-              </p>
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center text-[12px] text-faint">

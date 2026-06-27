@@ -12,7 +12,6 @@ type Visit = {
   photos: { label: string; taken: boolean }[];
   notes: string;
   address: string;
-  distanceKm: number;
 };
 
 export function OrderPanel({
@@ -142,7 +141,7 @@ export function OrderPanel({
           </p>
           <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted">
             <MapPin className="h-3 w-3" />
-            {visit.address} · {visit.distanceKm} km from rep
+            {visit.address}
           </p>
         </>
       )}

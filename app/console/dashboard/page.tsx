@@ -34,6 +34,7 @@ export default async function DashboardPage() {
   const pending = countOf("NEW") + countOf("IN_DELIVERY");
   const newCount = countOf("NEW");
   const delivering = countOf("IN_DELIVERY");
+  const staleCount = outlets.filter((o) => freshness(o.lastVisitAt).stale).length;
 
   const points = outlets.map((o) => {
     const f = freshness(o.lastVisitAt);
@@ -52,7 +53,7 @@ export default async function DashboardPage() {
     };
   });
 
-  const filters = ["This week", "All Bali", "All reps (12)", "All SKUs"];
+  const filters = ["This week", "All Bali", "All brands"];
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -63,11 +64,11 @@ export default async function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-[11px] font-semibold">
-            BH
+            SW
           </div>
           <div className="text-right">
-            <p className="text-[12px] font-medium">Bayu Hartono</p>
-            <p className="text-[10px] text-faint">Commercial Director</p>
+            <p className="text-[12px] font-medium">Siti Wulandari</p>
+            <p className="text-[10px] text-faint">Sales Manager · Bali</p>
           </div>
         </div>
       </header>
@@ -76,7 +77,7 @@ export default async function DashboardPage() {
         {/* greeting + filters */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="serif text-3xl tracking-tight">Good afternoon, Pak Bayu.</h1>
+            <h1 className="serif text-3xl tracking-tight">Good afternoon, Bu Siti.</h1>
             <p className="mt-1.5 text-[12px] text-faint">{DEMO_DATE_LABEL}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -107,8 +108,8 @@ export default async function DashboardPage() {
           <Kpi label="Revenue today" value={`IDR ${compactIDR(HEADLINE.revenueToday)}`}>
             <Delta up>↑ 12% vs 7-day avg · {compactIDR(HEADLINE.revenue7dAvg)}</Delta>
           </Kpi>
-          <Kpi label="Active outlets" value={String(HEADLINE.activeOutlets)}>
-            <span className="text-[11px] text-glow">{HEADLINE.staleOutlets} not visited 30d+</span>
+          <Kpi label="Active outlets" value={String(outlets.length)}>
+            <span className="text-[11px] text-glow">{staleCount} not visited 30d+</span>
           </Kpi>
         </div>
 
@@ -187,7 +188,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <p className="mt-4 text-[10px] text-faint">05 / 05 · Director dashboard · RAVN v0.7</p>
+        <p className="mt-4 text-[10px] text-faint">Manager overview · RAVN v0.7</p>
       </div>
     </div>
   );

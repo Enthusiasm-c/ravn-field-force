@@ -8,6 +8,16 @@ const at = (h: number, m: number) =>
   new Date(`2026-04-18T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+08:00`);
 const daysAgo = (d: number) => new Date(NOW.getTime() - d * 86_400_000);
 
+// Each outlet negotiates its own conditions vs list. Deterministic (hashed from
+// the outlet name) so reseeds are stable and the price book stays consistent.
+function priceFactor(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return 0.85 + (h % 18) / 100; // 0.85 .. 1.02 of list
+}
+const negotiated = (name: string, list: number) =>
+  Math.round((list * priceFactor(name)) / 5_000) * 5_000;
+
 async function main() {
   // Wipe (idempotent reseed)
   await prisma.orderLine.deleteMany();
@@ -19,7 +29,7 @@ async function main() {
 
   // ── Reps ──────────────────────────────────────────────
   const denis = await prisma.rep.create({
-    data: { name: "Denis Rahmawan", initials: "DR", area: "Canggu · Seminyak" },
+    data: { name: "Putu Wirawan", initials: "PW", area: "Canggu · Seminyak" },
   });
   const ari = await prisma.rep.create({
     data: { name: "Ari Maulana", initials: "AM", area: "Seminyak" },
@@ -45,6 +55,134 @@ async function main() {
   const cueTrad = await P("José Cuervo", "José Cuervo Tradicional", "CUE-TRD", 295_000);
 
   const catalog = { jag700, jag1000, jagCold, cueEsp, cueTrad };
+
+  // ── Wider catalog — ~100 plausible Bali-distributor SKUs ──
+  // The demo story runs on the 5 hero SKUs above. These add real catalog depth
+  // (the rep's "hundreds of SKUs" reality) and are pickable in the PO builder.
+  // Prices are wholesale-band IDR, consistent with the hero SKUs.
+  type Cat = [brand: string, name: string, sku: string, price: number, unit?: string];
+  const CATALOG: Cat[] = [
+    // ── Whisky ──
+    ["Johnnie Walker", "Johnnie Walker Red Label 700ml", "JWR-700", 420_000],
+    ["Johnnie Walker", "Johnnie Walker Black Label 700ml", "JWB-700", 720_000],
+    ["Johnnie Walker", "Johnnie Walker Double Black 700ml", "JWDB-700", 850_000],
+    ["Johnnie Walker", "Johnnie Walker Gold Label Reserve 700ml", "JWG-700", 1_250_000],
+    ["Johnnie Walker", "Johnnie Walker Blue Label 700ml", "JWBL-700", 3_800_000],
+    ["Chivas Regal", "Chivas Regal 12 Year 700ml", "CHV-12", 650_000],
+    ["Chivas Regal", "Chivas Regal 18 Year 700ml", "CHV-18", 1_450_000],
+    ["Ballantine's", "Ballantine's Finest 700ml", "BAL-FIN", 380_000],
+    ["Jack Daniel's", "Jack Daniel's Old No.7 700ml", "JD-N7", 560_000],
+    ["Jack Daniel's", "Jack Daniel's Tennessee Honey 700ml", "JD-HNY", 590_000],
+    ["Jack Daniel's", "Jack Daniel's Tennessee Apple 700ml", "JD-APL", 590_000],
+    ["Jameson", "Jameson Irish Whiskey 700ml", "JAM-700", 520_000],
+    ["Glenfiddich", "Glenfiddich 12 Year 700ml", "GLF-12", 880_000],
+    ["Glenfiddich", "Glenfiddich 15 Year 700ml", "GLF-15", 1_300_000],
+    ["Macallan", "The Macallan 12 Double Cask 700ml", "MAC-12", 1_900_000],
+    ["Singleton", "The Singleton 12 Year 700ml", "SGT-12", 780_000],
+    ["Monkey Shoulder", "Monkey Shoulder Blended Malt 700ml", "MKS-700", 720_000],
+    ["Famous Grouse", "The Famous Grouse 700ml", "FMG-700", 360_000],
+    ["Dewar's", "Dewar's White Label 700ml", "DWR-WL", 360_000],
+    ["Jim Beam", "Jim Beam White 700ml", "JB-WHT", 420_000],
+    // ── Vodka ──
+    ["Absolut", "Absolut Blue 700ml", "ABS-BLU", 380_000],
+    ["Absolut", "Absolut Citron 700ml", "ABS-CIT", 400_000],
+    ["Absolut", "Absolut Vanilia 700ml", "ABS-VAN", 400_000],
+    ["Absolut", "Absolut Mandrin 700ml", "ABS-MAN", 400_000],
+    ["Smirnoff", "Smirnoff Red No.21 700ml", "SMI-RED", 280_000],
+    ["Smirnoff", "Smirnoff Black 700ml", "SMI-BLK", 340_000],
+    ["Smirnoff", "Smirnoff Ice 275ml", "SMI-ICE", 45_000],
+    ["Grey Goose", "Grey Goose 700ml", "GG-700", 950_000],
+    ["Belvedere", "Belvedere 700ml", "BLV-700", 920_000],
+    ["Ketel One", "Ketel One 700ml", "KTL-700", 620_000],
+    ["Stolichnaya", "Stolichnaya Premium 700ml", "STO-700", 360_000],
+    ["Skyy", "Skyy Vodka 700ml", "SKY-700", 320_000],
+    // ── Gin ──
+    ["Bombay Sapphire", "Bombay Sapphire 700ml", "BOM-SAP", 480_000],
+    ["Tanqueray", "Tanqueray London Dry 700ml", "TAN-LD", 460_000],
+    ["Tanqueray", "Tanqueray No. Ten 700ml", "TAN-10", 720_000],
+    ["Hendrick's", "Hendrick's Gin 700ml", "HEN-GIN", 780_000],
+    ["Gordon's", "Gordon's London Dry 700ml", "GOR-700", 320_000],
+    ["Beefeater", "Beefeater London Dry 700ml", "BEF-700", 380_000],
+    ["Roku", "Roku Japanese Craft Gin 700ml", "ROK-700", 560_000],
+    ["Monkey 47", "Monkey 47 Schwarzwald Dry 500ml", "MK47-500", 980_000],
+    // ── Rum ──
+    ["Bacardi", "Bacardi Carta Blanca 700ml", "BAC-BLA", 300_000],
+    ["Bacardi", "Bacardi Carta Oro 700ml", "BAC-ORO", 320_000],
+    ["Bacardi", "Bacardi Carta Negra 700ml", "BAC-BLK", 330_000],
+    ["Captain Morgan", "Captain Morgan Spiced Gold 700ml", "CPM-SPG", 340_000],
+    ["Captain Morgan", "Captain Morgan Dark 700ml", "CPM-DRK", 340_000],
+    ["Havana Club", "Havana Club Añejo 3 700ml", "HAV-3", 360_000],
+    ["Havana Club", "Havana Club Añejo 7 700ml", "HAV-7", 520_000],
+    ["Malibu", "Malibu Coconut 700ml", "MAL-700", 300_000],
+    ["Kraken", "The Kraken Black Spiced 700ml", "KRK-700", 480_000],
+    // ── Tequila / Agave ──
+    ["Patrón", "Patrón Silver 700ml", "PAT-SIL", 1_650_000],
+    ["Patrón", "Patrón Reposado 700ml", "PAT-REP", 1_850_000],
+    ["Don Julio", "Don Julio Blanco 700ml", "DJ-BLA", 1_550_000],
+    ["Don Julio", "Don Julio Reposado 700ml", "DJ-REP", 1_750_000],
+    ["Don Julio", "Don Julio 1942 700ml", "DJ-1942", 4_200_000],
+    ["Olmeca", "Olmeca Blanco 700ml", "OLM-BLA", 420_000],
+    ["Olmeca", "Olmeca Altos Reposado 700ml", "OLM-ALT", 560_000],
+    ["Espolòn", "Espolòn Blanco 700ml", "ESP-BLA", 580_000],
+    ["1800", "1800 Reposado 700ml", "T1800-REP", 720_000],
+    // ── Liqueurs / Aperitif ──
+    ["Baileys", "Baileys Irish Cream 700ml", "BAI-700", 380_000],
+    ["Cointreau", "Cointreau 700ml", "COI-700", 520_000],
+    ["Aperol", "Aperol Aperitivo 700ml", "APE-700", 380_000],
+    ["Campari", "Campari 700ml", "CAM-700", 420_000],
+    ["Kahlúa", "Kahlúa Coffee Liqueur 700ml", "KAH-700", 380_000],
+    ["Grand Marnier", "Grand Marnier Cordon Rouge 700ml", "GRM-700", 620_000],
+    ["Disaronno", "Disaronno Amaretto 700ml", "DIS-700", 420_000],
+    ["Luxardo", "Luxardo Sambuca 700ml", "SAM-LUX", 360_000],
+    ["Bols", "Bols Triple Sec 700ml", "BOL-TSC", 180_000],
+    ["Midori", "Midori Melon Liqueur 700ml", "MID-700", 380_000],
+    ["Chambord", "Chambord Black Raspberry 500ml", "CHA-500", 560_000],
+    ["St-Germain", "St-Germain Elderflower 700ml", "STG-700", 620_000],
+    ["Frangelico", "Frangelico Hazelnut 700ml", "FRA-700", 440_000],
+    ["Pimm's", "Pimm's No.1 700ml", "PIM-700", 380_000],
+    ["Martini", "Martini Rosso Vermouth 1L", "MTN-ROS", 220_000],
+    ["Martini", "Martini Bianco Vermouth 1L", "MTN-BIA", 220_000],
+    // ── Cognac / Brandy ──
+    ["Hennessy", "Hennessy VS 700ml", "HNS-VS", 980_000],
+    ["Hennessy", "Hennessy VSOP 700ml", "HNS-VSOP", 1_650_000],
+    ["Hennessy", "Hennessy XO 700ml", "HNS-XO", 4_500_000],
+    ["Martell", "Martell VSOP 700ml", "MAR-VSOP", 1_450_000],
+    ["Rémy Martin", "Rémy Martin VSOP 700ml", "REM-VSOP", 1_380_000],
+    ["Mansion House", "Mansion House Brandy 700ml", "MAN-HSE", 240_000],
+    // ── Beer ──
+    ["Bintang", "Bintang Pilsener 620ml", "BIN-620", 48_000],
+    ["Bintang", "Bintang Pilsener 330ml", "BIN-330", 28_000, "can"],
+    ["Bintang", "Bintang Crystal 620ml", "BIN-CRY", 52_000],
+    ["Heineken", "Heineken 330ml", "HEI-330", 42_000, "can"],
+    ["Guinness", "Guinness Foreign Extra 320ml", "GUI-320", 55_000],
+    ["Corona", "Corona Extra 330ml", "COR-330", 65_000],
+    ["Stella Artois", "Stella Artois 330ml", "STE-330", 58_000],
+    ["San Miguel", "San Miguel Pale Pilsen 330ml", "SAN-330", 40_000, "can"],
+    ["Anker", "Anker Bir 620ml", "ANK-620", 45_000],
+    ["Prost", "Prost Pilsner 620ml", "PRO-620", 42_000],
+    ["Stark", "Stark Premium 500ml", "STK-500", 50_000],
+    ["Asahi", "Asahi Super Dry 330ml", "ASA-330", 55_000, "can"],
+    // ── Wine (Bali local + imported) ──
+    ["Hatten Wines", "Hatten Aga White 750ml", "HAT-AGA", 185_000],
+    ["Hatten Wines", "Hatten Tunjung Sparkling 750ml", "HAT-TUN", 210_000],
+    ["Hatten Wines", "Hatten Jepun Rosé 750ml", "HAT-JEP", 195_000],
+    ["Sababay", "Sababay White Velvet 750ml", "SAB-WV", 175_000],
+    ["Sababay", "Sababay Moscato d'Bali 750ml", "SAB-MOS", 180_000],
+    ["Plaga", "Plaga Red Wine 750ml", "PLG-RED", 165_000],
+    ["Two Islands", "Two Islands Sauvignon Blanc 750ml", "2IS-SB", 220_000],
+    ["Jacob's Creek", "Jacob's Creek Shiraz 750ml", "JCK-SHZ", 280_000],
+    ["Wolf Blass", "Wolf Blass Yellow Label Cabernet 750ml", "WB-YL", 320_000],
+    ["Hardys", "Hardys Stamp Chardonnay 750ml", "HRD-CHD", 260_000],
+  ];
+  await prisma.product.createMany({
+    data: CATALOG.map(([brand, name, sku, pricePerUnit, unit]) => ({
+      brand,
+      name,
+      sku,
+      pricePerUnit,
+      ...(unit ? { unit } : {}),
+    })),
+  });
 
   // ── Outlets (route of the day + dashboard coverage) ──
   const O = async (d: {
@@ -292,6 +430,8 @@ async function main() {
       ],
       notes:
         "Manager mentioned new happy hour promo starting next week — wants to push Jäger shots. Asked about Smirnoff Ice case deal for the weekend rush.",
+      objective: "Regular Visit",
+      pic: "Javier",
     },
   });
 
@@ -300,6 +440,7 @@ async function main() {
   const makeOrder = async (d: {
     code: string;
     outletId: string;
+    outletName: string;
     repId: string;
     visitId?: string;
     status: OrderStatus;
@@ -308,7 +449,13 @@ async function main() {
     lines: Line[];
     warehouseNote?: string;
   }) => {
-    const total = d.lines.reduce((s, l) => s + l.product.pricePerUnit * l.qty, 0);
+    // Each line is priced at this outlet's negotiated condition, snapshotted.
+    const priced = d.lines.map((l) => ({
+      product: l.product,
+      qty: l.qty,
+      unitPrice: negotiated(d.outletName, l.product.pricePerUnit),
+    }));
+    const total = priced.reduce((s, l) => s + l.unitPrice * l.qty, 0);
     return prisma.order.create({
       data: {
         code: d.code,
@@ -321,10 +468,11 @@ async function main() {
         deliveryDate: d.deliveryDate,
         warehouseNote: d.warehouseNote,
         lines: {
-          create: d.lines.map((l) => ({
+          create: priced.map((l) => ({
             productId: l.product.id,
             qty: l.qty,
-            lineTotal: l.product.pricePerUnit * l.qty,
+            unitPrice: l.unitPrice,
+            lineTotal: l.unitPrice * l.qty,
           })),
         },
       },
@@ -337,6 +485,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4421",
     outletId: oldMans.id,
+    outletName: oldMans.name,
     repId: denis.id,
     visitId: heroVisit.id,
     status: OrderStatus.NEW,
@@ -352,6 +501,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4420",
     outletId: laLaguna.id,
+    outletName: laLaguna.name,
     repId: denis.id,
     status: OrderStatus.NEW,
     createdAt: at(14, 32),
@@ -365,6 +515,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4419",
     outletId: ulekan.id,
+    outletName: ulekan.name,
     repId: niluh.id,
     status: OrderStatus.NEW,
     createdAt: at(14, 5),
@@ -378,6 +529,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4418",
     outletId: finns.id,
+    outletName: finns.name,
     repId: ari.id,
     status: OrderStatus.CONFIRMED,
     createdAt: at(13, 54),
@@ -392,6 +544,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4417",
     outletId: potatoHead.id,
+    outletName: potatoHead.name,
     repId: ari.id,
     status: OrderStatus.IN_DELIVERY,
     createdAt: at(13, 22),
@@ -406,6 +559,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4415",
     outletId: sariMade.id,
+    outletName: sariMade.name,
     repId: budi.id,
     status: OrderStatus.CONFIRMED,
     createdAt: at(12, 48),
@@ -419,6 +573,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4412",
     outletId: laPlancha.id,
+    outletName: laPlancha.name,
     repId: ari.id,
     status: OrderStatus.IN_DELIVERY,
     createdAt: at(11, 30),
@@ -433,6 +588,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4409",
     outletId: ulekan.id,
+    outletName: ulekan.name,
     repId: niluh.id,
     status: OrderStatus.CONFIRMED,
     createdAt: at(10, 14),
@@ -446,6 +602,7 @@ async function main() {
   await makeOrder({
     code: "ORD-4405",
     outletId: luigis.id,
+    outletName: luigis.name,
     repId: niluh.id,
     status: OrderStatus.REJECTED,
     createdAt: at(9, 40),
@@ -460,6 +617,17 @@ async function main() {
   };
   const repForArea = (area: string) =>
     area === "Canggu" ? denis : area === "Seminyak" ? ari : area === "Ubud" ? niluh : wayan;
+
+  // PAN's visit taxonomy + plausible Balinese PIC names for history variety.
+  const OBJECTIVES = [
+    "Regular Visit",
+    "Suggest Program & Promo",
+    "Check Stock & Visibility",
+    "Follow Up",
+    "Listing & House Pouring Deal",
+    "Tasting & Sampling",
+  ];
+  const PIC_NAMES = ["Wayan", "Made", "Komang", "Putu", "Kadek", "Agus", "Dewa", "Gede"];
 
   const months = [
     new Date("2025-10-12T11:00:00+08:00"),
@@ -488,6 +656,11 @@ async function main() {
   // Build all history operations, then run them in bounded chunks (fast + safe
   // on a pooled connection).
   const thunks: (() => Promise<unknown>)[] = [];
+  // Price memory — last agreed unit price per outlet×SKU, built from history.
+  const priceBook = new Map<
+    string,
+    { outletId: string; productId: string; unitPrice: number }
+  >();
   let histVisits = 0;
   let histOrders = 0;
   for (let idx = 0; idx < allOutlets.length; idx++) {
@@ -509,10 +682,19 @@ async function main() {
             ]
           : [{ product: pool[0], qty: units }];
 
+      for (const l of lines) {
+        priceBook.set(`${o.id}:${l.product.id}`, {
+          outletId: o.id,
+          productId: l.product.id,
+          unitPrice: negotiated(o.name, l.product.pricePerUnit),
+        });
+      }
+
       thunks.push(() =>
         makeOrder({
           code: `ORD-3${idx}-${m}`,
           outletId: o.id,
+          outletName: o.name,
           repId: rep.id,
           status: OrderStatus.CONFIRMED,
           createdAt: date,
@@ -543,6 +725,8 @@ async function main() {
               m % 2 === 0
                 ? "Stock check done. Owner happy with rotation, restocked house pour."
                 : "Quick visit — discussed weekend promo and menu placement.",
+            objective: OBJECTIVES[(idx + m) % OBJECTIVES.length],
+            pic: o.contactName ?? PIC_NAMES[(idx + m) % PIC_NAMES.length],
           },
         })
       );
@@ -555,13 +739,17 @@ async function main() {
     await Promise.all(thunks.slice(i, i + CHUNK).map((t) => t()));
   }
 
+  // Price memory — one row per outlet×SKU ever ordered (last agreed price).
+  await prisma.outletPrice.createMany({ data: [...priceBook.values()] });
+
   console.log("Seeded:", {
     reps: 5,
-    products: 5,
+    products: 5 + CATALOG.length,
     outlets: allOutlets.length,
     visits: 1 + histVisits,
     ordersToday: 10,
     historicalOrders: histOrders,
+    priceBookRows: priceBook.size,
   });
 }
 

@@ -46,22 +46,40 @@ model Outlet {
   contactName  String?
   contactPhone String?
   brands       String[] // sales-notes brands at this outlet
-  priority     Boolean    @default(false)
+  priority     Boolean       @default(false)
   lastVisitAt  DateTime?
   visits       Visit[]
   orders       Order[]
+  prices       OutletPrice[]
 
   @@index([area])
 }
 
 model Product {
-  id           String      @id @default(cuid())
+  id           String        @id @default(cuid())
   brand        String
   name         String // "Jägermeister 700ml"
-  sku          String      @unique // JAG-700
-  pricePerUnit Int // IDR per unit
-  unit         String      @default("btl")
+  sku          String        @unique // JAG-700
+  pricePerUnit Int // IDR per unit — list price (fallback when no outlet history)
+  unit         String        @default("btl")
   orderLines   OrderLine[]
+  outletPrices OutletPrice[]
+}
+
+/// Per-outlet price memory — the last agreed unit price for an SKU at an outlet.
+/// Repeat orders prefill from here, so the rep never re-quotes from scratch and
+/// each customer keeps its own negotiated conditions.
+model OutletPrice {
+  id        String   @id @default(cuid())
+  outletId  String
+  outlet    Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  unitPrice Int
+  updatedAt DateTime @updatedAt
+
+  @@unique([outletId, productId])
+  @@index([outletId])
 }
 
 model Visit {
@@ -77,6 +95,8 @@ model Visit {
   photos       Json // [{ label: "Shelf", taken: true }]
   competitors  Json // [{ brand: "Jägermeister", present: true }]
   notes        String   @default("")
+  objective    String? // visit purpose — PAN's taxonomy (Regular Visit, Follow Up…)
+  pic          String? // person in charge met at the outlet
   order        Order?
 
   @@index([repId])
@@ -108,5 +128,6 @@ model OrderLine {
   productId String
   product   Product @relation(fields: [productId], references: [id])
   qty       Int
-  lineTotal Int // pricePerUnit * qty, snapshotted
+  unitPrice Int // agreed price/unit for this outlet at order time, snapshotted
+  lineTotal Int // unitPrice * qty, snapshotted
 }

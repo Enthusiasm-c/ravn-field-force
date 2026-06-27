@@ -1,30 +1,22 @@
 import Link from "next/link";
-import { ArrowUpRight, Smartphone, ClipboardList, LayoutDashboard } from "lucide-react";
+import { ArrowUpRight, Smartphone, ClipboardList } from "lucide-react";
 
 const SURFACES = [
   {
     href: "/rep/outlets",
     eyebrow: "Mobile · iOS",
     title: "Sales Rep",
-    desc: "The route, in their pocket. Check in, capture the visit, send the PO from the barstool.",
+    desc: "The route, in their pocket. Check in, capture the visit, send the order from the barstool.",
     icon: Smartphone,
     screens: "3 screens",
   },
   {
-    href: "/console/orders",
+    href: "/console/dashboard",
     eyebrow: "Web · Console",
     title: "Sales Manager",
-    desc: "The order desk. Every PO lands with full visit context — confirm, edit, or reject.",
+    desc: "Overview, order desk, and territory — track the field and run the queue.",
     icon: ClipboardList,
-    screens: "Order queue",
-  },
-  {
-    href: "/console/dashboard",
-    eyebrow: "Web · Executive",
-    title: "Director",
-    desc: "The whole field, live. Visits, orders, revenue, and coverage — one shared view.",
-    icon: LayoutDashboard,
-    screens: "Dashboard",
+    screens: "Overview + desk",
   },
 ];
 
@@ -64,7 +56,7 @@ export default function Home() {
             Visits, orders, and data in one place — choose a viewpoint to walk the loop.
           </p>
 
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
             {SURFACES.map((s) => (
               <Link
                 key={s.href}

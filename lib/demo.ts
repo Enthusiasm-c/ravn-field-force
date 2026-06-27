@@ -15,7 +15,7 @@ export const HEADLINE = {
 };
 
 export const LEADERBOARD = [
-  { rank: 1, name: "Denis Rahmawan", revenue: 18_400_000, visits: 28, orders: 12, area: "Canggu" },
+  { rank: 1, name: "Putu Wirawan", revenue: 18_400_000, visits: 28, orders: 12, area: "Canggu" },
   { rank: 2, name: "Ari Maulana", revenue: 14_200_000, visits: 24, orders: 9, area: "Seminyak" },
   { rank: 3, name: "Budi Pratama", revenue: 10_800_000, visits: 19, orders: 7, area: "Seminyak" },
   { rank: 4, name: "Ni Luh Sari", revenue: 8_100_000, visits: 16, orders: 5, area: "Ubud" },
@@ -58,6 +58,19 @@ const PHOTO_SRC: Record<string, string> = {
 export function photoSrc(label: string): string {
   return PHOTO_SRC[label] ?? "/photos/bar.jpg";
 }
+
+// Visit objectives — PAN's own field taxonomy (mirrors what reps already pick
+// in the current check-in app, so the language is instantly familiar).
+export const VISIT_OBJECTIVES = [
+  "Regular Visit",
+  "Event & Activation",
+  "Suggest Program & Promo",
+  "Check Stock & Visibility",
+  "Listing & House Pouring Deal",
+  "Follow Up",
+  "Training & Product Knowledge",
+  "Tasting & Sampling",
+] as const;
 
 export const OUTLET_TYPE_LABEL = {
   BAR: "Bar",

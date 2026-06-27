@@ -4,18 +4,28 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { key: "outlets", label: "Outlets", icon: MapPin, href: "/rep/outlets" },
-  { key: "orders", label: "Orders", icon: ReceiptText, href: "/console/orders" },
-  { key: "me", label: "Me", icon: User, href: "/rep/outlets" },
+  { key: "orders", label: "Orders", icon: ReceiptText, href: "/rep/outlets" },
+  { key: "me", label: "Me", icon: User, href: "/rep/me" },
 ];
 
-export function RepNav({ active }: { active: "outlets" | "orders" | "me" }) {
+export function RepNav({
+  active,
+  newVisitHref = "/rep/check-in",
+}: {
+  active: "outlets" | "orders" | "me";
+  newVisitHref?: string;
+}) {
   return (
     <nav className="sticky bottom-0 z-20 border-t border-border bg-bg/90 backdrop-blur">
       <div className="relative flex items-center justify-around px-6 pb-6 pt-3">
-        {/* center FAB */}
-        <button className="absolute -top-5 left-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-ice text-white shadow-[0_8px_24px_-6px_var(--ice)]">
+        {/* center FAB — start a new visit (nearest outlet) */}
+        <Link
+          href={newVisitHref}
+          aria-label="New visit"
+          className="absolute -top-5 left-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full bg-ice text-white shadow-[0_8px_24px_-6px_var(--ice)] transition-transform active:scale-95"
+        >
           <Plus className="h-6 w-6" strokeWidth={2.4} />
-        </button>
+        </Link>
         {TABS.map((t, i) => {
           const on = t.key === active;
           return (
