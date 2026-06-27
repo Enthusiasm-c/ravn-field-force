@@ -8,7 +8,7 @@ import { MapView } from "@/components/map/map-view";
 import { formatIDR, compactIDR, freshness } from "@/lib/utils";
 import { OUTLET_TYPE_LABEL, PIN, STATUS_META, LEADERBOARD } from "@/lib/demo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const monthKeyFmt = new Intl.DateTimeFormat("en-CA", {
   year: "numeric", month: "2-digit", timeZone: "Asia/Makassar",

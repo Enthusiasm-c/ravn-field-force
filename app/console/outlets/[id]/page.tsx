@@ -9,7 +9,7 @@ import { OutletTabs } from "@/components/outlet-tabs";
 import { formatIDR, compactIDR, freshness, DEMO_NOW } from "@/lib/utils";
 import { OUTLET_TYPE_LABEL, PIN, STATUS_META } from "@/lib/demo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const monthKeyFmt = new Intl.DateTimeFormat("en-CA", {
   year: "numeric",

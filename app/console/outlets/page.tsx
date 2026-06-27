@@ -4,7 +4,7 @@ import { ConsoleOutletList } from "@/components/console-outlet-list";
 import { freshness } from "@/lib/utils";
 import { OUTLET_TYPE_LABEL } from "@/lib/demo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function OutletsConsolePage() {
   const outlets = await prisma.outlet.findMany({

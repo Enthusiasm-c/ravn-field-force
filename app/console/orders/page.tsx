@@ -6,7 +6,7 @@ import { formatIDR, DEMO_DAY_START } from "@/lib/utils";
 import { STATUS_META, OUTLET_TYPE_LABEL } from "@/lib/demo";
 import { OrderPanel } from "./order-panel";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const TABS: { key: string; label: string; status?: OrderStatus }[] = [
   { key: "all", label: "All" },

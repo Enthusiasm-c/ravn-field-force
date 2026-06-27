@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { ConsoleTopbar } from "@/components/console-topbar";
 import { RepAccessList } from "@/components/rep-access-list";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function RepsPage() {
   const reps = await prisma.rep.findMany({ orderBy: { name: "asc" } });

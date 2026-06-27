@@ -4,7 +4,7 @@ import { compactIDR, formatIDR, DEMO_NOW, freshness } from "@/lib/utils";
 import { HEADLINE, LEADERBOARD, DEMO_DATE_LABEL, PIN } from "@/lib/demo";
 import { MapView } from "@/components/map/map-view";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 function ago(d: Date) {
   const min = Math.round((DEMO_NOW.getTime() - d.getTime()) / 60000);

@@ -2,7 +2,7 @@ import { Bell, Globe, HelpCircle, LogOut, ChevronRight } from "lucide-react";
 import { PhoneFrame } from "@/components/phone-frame";
 import { RepNav } from "@/components/rep-nav";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default function RepMePage() {
   return (

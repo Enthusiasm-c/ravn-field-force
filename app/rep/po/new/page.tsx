@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { PoBuilder } from "./po-builder";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function NewPoPage({
   searchParams,
