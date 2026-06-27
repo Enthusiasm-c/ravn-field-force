@@ -114,7 +114,7 @@ export function VisitCapture(props: {
   if (sent) {
     return (
       <PhoneFrame>
-        <div className="flex min-h-[800px] flex-col items-center justify-center px-8 text-center">
+        <div className="flex min-h-[100dvh] lg:min-h-[800px] flex-col items-center justify-center px-8 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-ok/15 text-ok">
             <Check className="h-8 w-8" strokeWidth={2.2} />
           </div>
@@ -144,7 +144,7 @@ export function VisitCapture(props: {
 
   return (
     <PhoneFrame>
-      <div className="flex min-h-[800px] flex-col">
+      <div className="flex min-h-[100dvh] lg:min-h-[800px] flex-col">
         {/* header */}
         <header className="flex items-center justify-between px-4 pb-3 pt-3">
           <Link

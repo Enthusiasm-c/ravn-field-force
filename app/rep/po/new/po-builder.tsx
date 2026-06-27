@@ -44,7 +44,7 @@ export function PoBuilder(props: {
 
   return (
     <PhoneFrame statusTime="14:47">
-      <div className="flex min-h-[800px] flex-col">
+      <div className="flex min-h-[100dvh] lg:min-h-[800px] flex-col">
         <header className="flex items-center justify-between px-4 pb-2 pt-3">
           <Link
             href={`/rep/visit/${props.visitCode}`}

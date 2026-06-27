@@ -12,7 +12,7 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
             "radial-gradient(60% 50% at 50% 0%, color-mix(in srgb, var(--ice) 14%, transparent), transparent)",
         }}
       />
-      <div className="relative flex min-h-dvh items-center justify-center">
+      <div className="relative flex min-h-dvh justify-center lg:items-center">
         <PhoneStage>{children}</PhoneStage>
       </div>
       <SurfaceSwitcher placement="corner" />

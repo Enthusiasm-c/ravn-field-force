@@ -32,7 +32,7 @@ export default async function CheckInPage() {
 
   return (
     <PhoneFrame>
-      <div className="flex min-h-[800px] flex-col">
+      <div className="flex min-h-[100dvh] lg:min-h-[800px] flex-col">
         <header className="flex items-center justify-between px-4 pb-1 pt-3">
           <span className="eyebrow">New visit</span>
           <Link href="/rep/outlets" className="text-muted">

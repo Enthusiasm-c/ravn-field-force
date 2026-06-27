@@ -5,7 +5,7 @@ import { PhoneFrame } from "@/components/phone-frame";
 export default function RepLoading() {
   return (
     <PhoneFrame>
-      <div className="flex h-[800px] flex-col animate-pulse">
+      <div className="flex h-[100dvh] lg:h-[800px] flex-col animate-pulse">
         <header className="px-5 pb-2 pt-4">
           <div className="h-2.5 w-20 rounded bg-surface-2" />
           <div className="mt-3 h-7 w-40 rounded-lg bg-surface-2" />
