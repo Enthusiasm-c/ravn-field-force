@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { Pencil, Trash2, UserPlus, MapPin, Tag } from "lucide-react";
 
 type Rep = {
   id: string;
@@ -9,6 +9,8 @@ type Rep = {
   area: string;
   initials: string;
   email: string;
+  areas: string[];
+  categories: string[];
 };
 
 export function RepAccessList({ reps }: { reps: Rep[] }) {
@@ -45,9 +47,27 @@ export function RepAccessList({ reps }: { reps: Rep[] }) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[14px] font-medium">{r.name}</p>
-                <p className="truncate text-[11px] text-faint">
-                  {r.area} · {r.email}
-                </p>
+                <p className="truncate text-[11px] text-faint">{r.email}</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[10px]">
+                  <MapPin className="h-3 w-3 shrink-0 text-faint" />
+                  {r.areas.map((a) => (
+                    <span
+                      key={a}
+                      className="rounded-full bg-surface-2 px-2 py-0.5 text-muted"
+                    >
+                      {a}
+                    </span>
+                  ))}
+                  <Tag className="ml-1 h-3 w-3 shrink-0 text-faint" />
+                  {r.categories.map((c) => (
+                    <span
+                      key={c}
+                      className="rounded-full bg-ice/10 px-2 py-0.5 text-ice"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               {/* access toggle */}

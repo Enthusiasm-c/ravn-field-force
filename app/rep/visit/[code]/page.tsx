@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
+import { prisma, getActiveRep } from "@/lib/db";
 import { VisitCapture } from "./visit-capture";
 
 export const revalidate = 300;
@@ -21,23 +21,28 @@ export default async function VisitPage({
 
   // Full SKU catalog + this outlet's price memory. The rep searches and adds
   // products; each carries the last agreed price for this outlet if there is one.
-  const [book, products] = await Promise.all([
+  const [book, products, rep] = await Promise.all([
     prisma.outletPrice.findMany({
       where: { outletId: visit.outletId },
       select: { productId: true, unitPrice: true },
     }),
     prisma.product.findMany({
       orderBy: [{ brand: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, sku: true, pricePerUnit: true },
+      select: { id: true, name: true, sku: true, pricePerUnit: true, category: true },
     }),
+    getActiveRep(),
   ]);
   const remembered = new Map(book.map((p) => [p.productId, p.unitPrice]));
+  // The rep can only order SKUs in their assigned lines — others show locked.
+  const repCategories = rep?.categories ?? [];
   const catalog = products.map((p) => ({
     id: p.id,
     name: p.name,
     sku: p.sku,
+    category: p.category,
     listPrice: p.pricePerUnit,
     lastPrice: remembered.get(p.id) ?? null,
+    allowed: repCategories.length === 0 || repCategories.includes(p.category),
   }));
 
   // Where the "send order" lands — a real order for this outlet.
@@ -67,6 +72,7 @@ export default async function VisitPage({
       pic={visit.pic ?? visit.outlet.contactName ?? ""}
       backHref={`/rep/outlet/${visit.outletId}`}
       catalog={catalog}
+      repCategories={repCategories}
       orderCode={orderCode}
     />
   );

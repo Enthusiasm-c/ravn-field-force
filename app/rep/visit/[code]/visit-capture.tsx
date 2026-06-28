@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Search,
   Check,
+  Lock,
 } from "lucide-react";
 import { PhoneFrame } from "@/components/phone-frame";
 import { VISIT_OBJECTIVES, photoSrc } from "@/lib/demo";
@@ -24,8 +25,10 @@ type Item = {
   id: string;
   name: string;
   sku: string;
+  category: string;
   listPrice: number;
   lastPrice: number | null;
+  allowed: boolean;
 };
 type Line = {
   id: string;
@@ -49,6 +52,7 @@ export function VisitCapture(props: {
   pic: string;
   backHref: string;
   catalog: Item[];
+  repCategories: string[];
   orderCode: string;
 }) {
   const router = useRouter();
@@ -80,6 +84,7 @@ export function VisitCapture(props: {
     : [];
 
   const addLine = (i: Item) => {
+    if (!i.allowed) return; // outside the rep's assigned lines
     setLines((prev) =>
       prev.some((l) => l.id === i.id)
         ? prev
@@ -278,6 +283,15 @@ export function VisitCapture(props: {
               </button>
             ) : (
               <div className="space-y-2">
+                {/* assigned-lines scope — why some SKUs are locked */}
+                <p className="rounded-lg bg-surface-2/50 px-3 py-2 text-[11px] leading-relaxed text-muted">
+                  Your lines:{" "}
+                  <span className="font-medium text-text">
+                    {props.repCategories.join(" · ") || "All"}
+                  </span>
+                  . Other brands are handled by another rep.
+                </p>
+
                 {/* SKU search */}
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2.5">
                   <Search className="h-4 w-4 text-faint" />
@@ -297,30 +311,49 @@ export function VisitCapture(props: {
                         No SKU matches &ldquo;{query}&rdquo;
                       </p>
                     ) : (
-                      results.map((i) => (
-                        <button
-                          key={i.id}
-                          onClick={() => addLine(i)}
-                          className="flex w-full items-center justify-between border-b border-border/60 px-3 py-2.5 text-left last:border-0"
-                        >
-                          <div className="min-w-0 pr-2">
-                            <p className="truncate text-[13px] font-medium">{i.name}</p>
-                            <p className="eyebrow">{i.sku}</p>
+                      results.map((i) =>
+                        i.allowed ? (
+                          <button
+                            key={i.id}
+                            onClick={() => addLine(i)}
+                            className="flex w-full items-center justify-between border-b border-border/60 px-3 py-2.5 text-left last:border-0"
+                          >
+                            <div className="min-w-0 pr-2">
+                              <p className="truncate text-[13px] font-medium">{i.name}</p>
+                              <p className="eyebrow">{i.sku}</p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="tabular text-[12px]">
+                                IDR {formatIDR(i.lastPrice ?? i.listPrice)}
+                              </p>
+                              <p
+                                className={`text-[10px] ${
+                                  i.lastPrice != null ? "text-ice" : "text-faint"
+                                }`}
+                              >
+                                {i.lastPrice != null ? "Last agreed" : "List price"}
+                              </p>
+                            </div>
+                          </button>
+                        ) : (
+                          <div
+                            key={i.id}
+                            className="flex w-full items-center justify-between border-b border-border/60 px-3 py-2.5 last:border-0 opacity-60"
+                          >
+                            <div className="min-w-0 pr-2">
+                              <p className="truncate text-[13px] font-medium text-muted">
+                                {i.name}
+                              </p>
+                              <p className="eyebrow">
+                                {i.sku} · {i.category}
+                              </p>
+                            </div>
+                            <span className="flex shrink-0 items-center gap-1 text-[10px] text-faint">
+                              <Lock className="h-3 w-3" /> Not in your line
+                            </span>
                           </div>
-                          <div className="shrink-0 text-right">
-                            <p className="tabular text-[12px]">
-                              IDR {formatIDR(i.lastPrice ?? i.listPrice)}
-                            </p>
-                            <p
-                              className={`text-[10px] ${
-                                i.lastPrice != null ? "text-ice" : "text-faint"
-                              }`}
-                            >
-                              {i.lastPrice != null ? "Last agreed" : "List price"}
-                            </p>
-                          </div>
-                        </button>
-                      ))
+                        )
+                      )
                     )}
                   </div>
                 )}

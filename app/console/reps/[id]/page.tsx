@@ -113,6 +113,36 @@ export default async function RepDetailPage({
           </div>
         </div>
 
+        {/* territory & SKU lines — the rep's assigned scope */}
+        <div className="mt-4 flex flex-wrap items-center gap-1.5 rounded-2xl border border-border bg-surface px-4 py-3">
+          <span className="eyebrow mr-1">Territory</span>
+          {rep.areas.length ? (
+            rep.areas.map((a) => (
+              <span
+                key={a}
+                className="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] text-muted"
+              >
+                {a}
+              </span>
+            ))
+          ) : (
+            <span className="text-[11px] text-faint">All Bali</span>
+          )}
+          <span className="eyebrow ml-3 mr-1">Lines</span>
+          {rep.categories.length ? (
+            rep.categories.map((c) => (
+              <span
+                key={c}
+                className="rounded-full bg-ice/10 px-2.5 py-1 text-[11px] text-ice"
+              >
+                {c}
+              </span>
+            ))
+          ) : (
+            <span className="text-[11px] text-faint">All SKUs</span>
+          )}
+        </div>
+
         {/* KPIs */}
         <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
           <Kpi label="Revenue · lifetime" value={`IDR ${compactIDR(lifetime)}`} />

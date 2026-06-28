@@ -54,6 +54,33 @@ const venueAddress = (name: string, area: string) => {
   return `${list[h % list.length]} No. ${1 + (h % 180)}, ${area}`;
 };
 
+// ── SKU lines (categories) — what a rep can be assigned to sell. The two hero
+//    brands are their own lines; everything else rolls up to a spirit category.
+const CATEGORY_OF_BRAND: Record<string, string> = {
+  Jägermeister: "Jägermeister",
+  "José Cuervo": "José Cuervo",
+  "Johnnie Walker": "Whisky", "Chivas Regal": "Whisky", "Ballantine's": "Whisky",
+  "Jack Daniel's": "Whisky", Jameson: "Whisky", Glenfiddich: "Whisky",
+  Macallan: "Whisky", Singleton: "Whisky", "Monkey Shoulder": "Whisky",
+  "Famous Grouse": "Whisky", "Dewar's": "Whisky", "Jim Beam": "Whisky",
+  Absolut: "Vodka", Smirnoff: "Vodka", "Grey Goose": "Vodka", Belvedere: "Vodka",
+  "Ketel One": "Vodka", Stolichnaya: "Vodka", Skyy: "Vodka",
+  "Bombay Sapphire": "Gin", Tanqueray: "Gin", "Hendrick's": "Gin", "Gordon's": "Gin",
+  Beefeater: "Gin", Roku: "Gin", "Monkey 47": "Gin",
+  Bacardi: "Rum", "Captain Morgan": "Rum", "Havana Club": "Rum", Malibu: "Rum", Kraken: "Rum",
+  Patrón: "Tequila", "Don Julio": "Tequila", Olmeca: "Tequila", Espolòn: "Tequila", "1800": "Tequila",
+  Baileys: "Liqueur", Cointreau: "Liqueur", Aperol: "Liqueur", Campari: "Liqueur",
+  Kahlúa: "Liqueur", "Grand Marnier": "Liqueur", Disaronno: "Liqueur", Luxardo: "Liqueur",
+  Bols: "Liqueur", Midori: "Liqueur", Chambord: "Liqueur", "St-Germain": "Liqueur",
+  Frangelico: "Liqueur", "Pimm's": "Liqueur", Martini: "Liqueur",
+  Hennessy: "Cognac", Martell: "Cognac", "Rémy Martin": "Cognac", "Mansion House": "Cognac",
+  Bintang: "Beer", Heineken: "Beer", Guinness: "Beer", Corona: "Beer", "Stella Artois": "Beer",
+  "San Miguel": "Beer", Anker: "Beer", Prost: "Beer", Stark: "Beer", Asahi: "Beer",
+  "Hatten Wines": "Wine", Sababay: "Wine", Plaga: "Wine", "Two Islands": "Wine",
+  "Jacob's Creek": "Wine", "Wolf Blass": "Wine", Hardys: "Wine",
+};
+const categoryOf = (brand: string) => CATEGORY_OF_BRAND[brand] ?? "Other";
+
 async function main() {
   // Wipe (idempotent reseed)
   await prisma.orderLine.deleteMany();
@@ -65,24 +92,46 @@ async function main() {
 
   // ── Reps ──────────────────────────────────────────────
   const denis = await prisma.rep.create({
-    data: { name: "Putu Wirawan", initials: "PW", area: "Canggu · Seminyak" },
+    data: {
+      name: "Putu Wirawan", initials: "PW", area: "Canggu · Seminyak",
+      areas: ["Canggu", "Seminyak"],
+      categories: ["Jägermeister", "José Cuervo", "Whisky", "Liqueur"],
+    },
   });
   const ari = await prisma.rep.create({
-    data: { name: "Ari Maulana", initials: "AM", area: "Seminyak" },
+    data: {
+      name: "Ari Maulana", initials: "AM", area: "Seminyak · Canggu",
+      areas: ["Seminyak", "Canggu"],
+      categories: ["Jägermeister", "Vodka", "Tequila", "Beer"],
+    },
   });
   const budi = await prisma.rep.create({
-    data: { name: "Budi Pratama", initials: "BP", area: "Seminyak" },
+    data: {
+      name: "Budi Pratama", initials: "BP", area: "Seminyak",
+      areas: ["Seminyak"],
+      categories: ["Whisky", "Gin", "Rum"],
+    },
   });
   const niluh = await prisma.rep.create({
-    data: { name: "Ni Luh Sari", initials: "NS", area: "Ubud" },
+    data: {
+      name: "Ni Luh Sari", initials: "NS", area: "Ubud · Kuta Selatan",
+      areas: ["Ubud", "Kuta Selatan"],
+      categories: ["José Cuervo", "Wine", "Liqueur"],
+    },
   });
   const wayan = await prisma.rep.create({
-    data: { name: "Wayan Adi", initials: "WA", area: "Sanur" },
+    data: {
+      name: "Wayan Adi", initials: "WA", area: "Sanur · Amed",
+      areas: ["Sanur", "Amed"],
+      categories: ["Jägermeister", "Beer", "Cognac"],
+    },
   });
 
   // ── Product / SKU catalog ─────────────────────────────
   const P = async (brand: string, name: string, sku: string, price: number) =>
-    prisma.product.create({ data: { brand, name, sku, pricePerUnit: price } });
+    prisma.product.create({
+      data: { brand, name, sku, pricePerUnit: price, category: categoryOf(brand) },
+    });
 
   const jag700 = await P("Jägermeister", "Jägermeister 700ml", "JAG-700", 200_000);
   const jag1000 = await P("Jägermeister", "Jägermeister 1L", "JAG-1000", 280_000);
@@ -216,6 +265,7 @@ async function main() {
       name,
       sku,
       pricePerUnit,
+      category: categoryOf(brand),
       ...(unit ? { unit } : {}),
     })),
   });

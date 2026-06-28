@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { X } from "lucide-react";
-import { prisma } from "@/lib/db";
+import { prisma, getActiveRep } from "@/lib/db";
 import { PhoneFrame } from "@/components/phone-frame";
 import { RepCheckInList } from "@/components/rep-checkin-list";
 import { freshness } from "@/lib/utils";
@@ -9,12 +9,19 @@ import { OUTLET_TYPE_LABEL } from "@/lib/demo";
 export const revalidate = 300;
 
 export default async function CheckInPage() {
-  const outlets = await prisma.outlet.findMany({
-    orderBy: [{ area: "asc" }, { name: "asc" }],
-    include: {
-      visits: { orderBy: { checkInAt: "desc" }, take: 1, select: { code: true } },
-    },
-  });
+  const [rep, allOutlets] = await Promise.all([
+    getActiveRep(),
+    prisma.outlet.findMany({
+      orderBy: [{ area: "asc" }, { name: "asc" }],
+      include: {
+        visits: { orderBy: { checkInAt: "desc" }, take: 1, select: { code: true } },
+      },
+    }),
+  ]);
+  const territory = rep?.areas ?? [];
+  const outlets = territory.length
+    ? allOutlets.filter((o) => territory.includes(o.area))
+    : allOutlets;
 
   const rows = outlets.map((o) => {
     const fr = freshness(o.lastVisitAt);
@@ -43,7 +50,7 @@ export default async function CheckInPage() {
         <div className="px-4 pt-1">
           <h1 className="text-2xl font-semibold tracking-tight">Select outlet</h1>
           <p className="mt-1 text-[12px] text-muted">
-            Pick where you&rsquo;re checking in.
+            Your territory · {territory.join(" · ") || "All Bali"}
           </p>
         </div>
 

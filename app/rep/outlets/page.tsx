@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { prisma, getActiveRep } from "@/lib/db";
 import { PhoneFrame } from "@/components/phone-frame";
 import { RepNav } from "@/components/rep-nav";
 import { RepOutletList } from "@/components/rep-outlet-list";
@@ -9,7 +9,16 @@ import { OUTLET_TYPE_LABEL } from "@/lib/demo";
 export const revalidate = 300;
 
 export default async function OutletsPage() {
-  const outlets = await prisma.outlet.findMany();
+  // Scope the route to the rep's assigned territory — outlets outside their
+  // districts simply don't appear (handled by another rep).
+  const [rep, allOutlets] = await Promise.all([
+    getActiveRep(),
+    prisma.outlet.findMany(),
+  ]);
+  const territory = rep?.areas ?? [];
+  const outlets = territory.length
+    ? allOutlets.filter((o) => territory.includes(o.area))
+    : allOutlets;
 
   // Without distance, order by what actually matters on a route: the accounts
   // that need attention first — overdue, then due, then priority.
@@ -56,7 +65,7 @@ export default async function OutletsPage() {
           </Link>
           <div className="flex items-end justify-between">
             <div>
-              <p className="eyebrow">Route DPS-04 · Canggu</p>
+              <p className="eyebrow">Territory · {territory.join(" · ") || "All Bali"}</p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">Outlets</h1>
             </div>
             <div className="text-right">

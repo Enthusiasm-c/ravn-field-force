@@ -26,12 +26,14 @@ enum OrderStatus {
 }
 
 model Rep {
-  id       String  @id @default(cuid())
-  name     String
-  initials String
-  area     String // "Canggu · Seminyak"
-  visits   Visit[]
-  orders   Order[]
+  id         String   @id @default(cuid())
+  name       String
+  initials   String
+  area       String // "Canggu · Seminyak" (display label)
+  areas      String[] // territories this rep may work: ["Canggu", "Seminyak"]
+  categories String[] // SKU lines this rep may sell: ["Jägermeister", "Whisky"]
+  visits     Visit[]
+  orders     Order[]
 }
 
 model Outlet {
@@ -60,6 +62,7 @@ model Product {
   brand        String
   name         String // "Jägermeister 700ml"
   sku          String        @unique // JAG-700
+  category     String        @default("Other") // SKU line: Whisky, Vodka, Jägermeister…
   pricePerUnit Int // IDR per unit — list price (fallback when no outlet history)
   unit         String        @default("btl")
   orderLines   OrderLine[]

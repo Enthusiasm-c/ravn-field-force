@@ -13,6 +13,8 @@ export default async function RepsPage() {
     area: r.area,
     initials: r.initials,
     email: `${r.name.split(" ")[0].toLowerCase()}@pan-bali.com`,
+    areas: r.areas,
+    categories: r.categories,
   }));
 
   return (
