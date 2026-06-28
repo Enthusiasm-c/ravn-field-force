@@ -8,6 +8,7 @@
 - **Three viewpoints, no login.** A floating `SurfaceSwitcher` jumps Rep / Manager / Director. Personas are seeded names (Denis / Siti / Bayu). Clerk was explicitly *not* used — would add login friction to a demo.
 - **Light theme** (switched from an original dark theme on client feedback: "office tool, dark is tiring"). All surfaces light. Keep the RAVN identity (ice-blue distance, Fraunces totals, alpenglow stale) — just on light.
 - **Inventory & Reports were removed** from the console (client asked). Don't re-add.
+- **Rep territory + SKU-line assignments** (`Rep.areas`, `Rep.categories`, `Product.category`). Each rep is scoped to districts + product **lines** — assignment is by **category** (11 lines: Jägermeister & José Cuervo are their *own* lines, plus Whisky/Vodka/Gin/Rum/Tequila/Liqueur/Beer/Wine/Cognac), **not by brand** (brand-level was rejected as too granular for the UI; brand→category map lives in `seed.ts` `CATEGORY_OF_BRAND`, covers all 107 SKUs). The login-less field role is scoped to the **active rep = Putu Wirawan** (`getActiveRep()` in `lib/db.ts`, fetched by name). Enforcement is **hard block with a clear message**: `/rep/outlets` + `/rep/check-in` hide outlets outside `rep.areas` (header shows "Territory · …"); the visit order builder marks SKUs outside `rep.categories` as locked ("Not in your line", unaddable) under a "Your lines: …" caption. Manager Reps section shows territory + line chips but **editing is a mockup** (positioned as a paid "access management" upgrade). **Enforcement is forward-looking** — it gates new order entry by the active rep; seeded history/desk orders are *not* retro-validated against categories (no UI cross-references a rep's lines vs his past order items, so no visible contradiction). Don't try to "fix" historical orders to match — framed as "assignment policy is new, applies going forward".
 
 ## Architecture decisions
 
@@ -39,6 +40,7 @@
 - **Neon serverless cold-start**: the first request after idle can throw `PrismaClientKnownRequestError: Can't reach database`. Transient — a reload fixes it. On Vercel with traffic it stays warm.
 - **Two lockfiles** (`~/package-lock.json` exists) made Next pick the wrong workspace root → `turbopack.root` is pinned in `next.config.ts`.
 - Removing `.next` while `npm run dev` is running breaks the dev server — restart it after a production `build`.
+- **After a schema change, restart `npm run dev`.** `db push` / `prisma generate` regenerate the client, but a dev server started earlier holds the *old* client in memory → `PrismaClientValidationError: Unknown field '<new field>'` (e.g. `Product.category`). Prod is fine (build regenerates). Fix: Ctrl+C the dev server and `npm run dev` again — no need to touch the schema.
 
 ## Anti-patterns
 
