@@ -332,7 +332,10 @@ export function VisitCapture(props: {
                                   {i.lastPrice !== i.listPrice && (
                                     <span className="text-faint">
                                       {" "}
-                                      · list {formatIDR(i.listPrice)}
+                                      · list{" "}
+                                      <span className="line-through">
+                                        {formatIDR(i.listPrice)}
+                                      </span>
                                     </span>
                                   )}
                                 </p>
@@ -373,24 +376,41 @@ export function VisitCapture(props: {
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 pr-2">
                         <p className="text-[13px] font-medium">{l.name}</p>
-                        <p className="eyebrow mt-0.5">
-                          {l.sku} · IDR {formatIDR(l.price)}/btl
-                        </p>
-                        <span
-                          className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            l.isRemembered
-                              ? "bg-ice/10 text-ice"
-                              : "bg-surface-2 text-faint"
-                          }`}
-                        >
-                          {l.isRemembered ? "Last agreed price" : "List price"}
-                          {l.isRemembered && l.price !== l.listPrice && (
-                            <span className="opacity-70">
-                              {" "}
-                              · list {formatIDR(l.listPrice)}
+                        <p className="eyebrow mt-0.5">{l.sku}</p>
+                        {/* unit price — agreed vs list, each clearly labelled */}
+                        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                          {l.isRemembered ? (
+                            <>
+                              <span className="inline-flex items-baseline gap-1">
+                                <span className="text-[9px] font-medium uppercase tracking-wide text-faint">
+                                  Agreed
+                                </span>
+                                <span className="tabular text-[12px] font-semibold text-ice">
+                                  IDR {formatIDR(l.price)}
+                                </span>
+                              </span>
+                              {l.price !== l.listPrice && (
+                                <span className="inline-flex items-baseline gap-1">
+                                  <span className="text-[9px] font-medium uppercase tracking-wide text-faint">
+                                    List
+                                  </span>
+                                  <span className="tabular text-[12px] text-faint line-through">
+                                    {formatIDR(l.listPrice)}
+                                  </span>
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="inline-flex items-baseline gap-1">
+                              <span className="text-[9px] font-medium uppercase tracking-wide text-faint">
+                                List price
+                              </span>
+                              <span className="tabular text-[12px]">
+                                IDR {formatIDR(l.listPrice)}
+                              </span>
                             </span>
                           )}
-                        </span>
+                        </div>
                       </div>
                       <button
                         onClick={() => removeLine(l.id)}
@@ -400,9 +420,14 @@ export function VisitCapture(props: {
                         <X className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="tabular text-[13px] font-medium">
-                        {formatIDR(l.price * l.qty)}
+                    <div className="mt-2.5 flex items-center justify-between border-t border-border/50 pt-2.5">
+                      <span className="inline-flex items-baseline gap-1.5">
+                        <span className="text-[9px] font-medium uppercase tracking-wide text-faint">
+                          Subtotal
+                        </span>
+                        <span className="tabular text-[13px] font-semibold">
+                          IDR {formatIDR(l.price * l.qty)}
+                        </span>
                       </span>
                       <div className="flex items-center gap-3">
                         <button
