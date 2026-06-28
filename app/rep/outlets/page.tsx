@@ -56,14 +56,27 @@ export default async function OutletsPage() {
       <div className="flex h-[100dvh] lg:h-[800px] flex-col">
         {/* header */}
         <header className="px-5 pb-1 pt-4">
-          <Link
-            href="/"
-            aria-label="Home"
-            className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong bg-surface"
-          >
-            <span className="serif text-base leading-none text-ice">R</span>
-          </Link>
-          <div className="flex items-end justify-between">
+          {/* top bar — brand home ↔ signed-in rep */}
+          <div className="flex items-center justify-between">
+            <Link
+              href="/"
+              aria-label="Home"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border-strong bg-surface"
+            >
+              <span className="serif text-base leading-none text-ice">R</span>
+            </Link>
+            <div className="flex items-center gap-2.5">
+              <div className="text-right leading-tight">
+                <p className="text-[12px] font-medium">{rep?.name ?? "Putu Wirawan"}</p>
+                <p className="text-[10px] text-faint">Route DPS-04</p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ice/10 text-[12px] font-semibold text-ice">
+                {rep?.initials ?? "PW"}
+              </div>
+            </div>
+          </div>
+          {/* title */}
+          <div className="mt-4 flex items-end justify-between">
             <div>
               <p className="eyebrow">Territory · {territory.join(" · ") || "All Bali"}</p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight">Outlets</h1>

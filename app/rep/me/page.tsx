@@ -9,16 +9,18 @@ export default function RepMePage() {
   return (
     <PhoneFrame>
       <div className="flex h-[100dvh] lg:h-[800px] flex-col">
-        <header className="px-5 pb-1 pt-4">
+        <header className="flex items-center gap-3 px-5 pb-1 pt-4">
           <Link
             href="/"
             aria-label="Home"
-            className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-strong bg-surface"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface"
           >
             <span className="serif text-base leading-none text-ice">R</span>
           </Link>
-          <p className="eyebrow">Profile</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Me</h1>
+          <div>
+            <p className="eyebrow">Profile</p>
+            <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">Me</h1>
+          </div>
         </header>
 
         <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4 pb-4 pt-2">
