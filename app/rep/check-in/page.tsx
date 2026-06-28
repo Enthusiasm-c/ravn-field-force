@@ -12,7 +12,7 @@ export default async function CheckInPage() {
   const [rep, allOutlets] = await Promise.all([
     getActiveRep(),
     prisma.outlet.findMany({
-      orderBy: [{ area: "asc" }, { name: "asc" }],
+      orderBy: { distanceKm: "asc" }, // nearest outlet first — you check in where you are
       include: {
         visits: { orderBy: { checkInAt: "desc" }, take: 1, select: { code: true } },
       },
@@ -33,6 +33,7 @@ export default async function CheckInPage() {
       brands: o.brands,
       freshLabel: fr.label,
       stale: fr.stale,
+      distanceKm: o.distanceKm,
       href: `/rep/visit/${o.visits[0]?.code ?? "VST-8842"}`,
     };
   });
@@ -50,7 +51,7 @@ export default async function CheckInPage() {
         <div className="px-4 pt-1">
           <h1 className="text-2xl font-semibold tracking-tight">Select outlet</h1>
           <p className="mt-1 text-[12px] text-muted">
-            Your territory · {territory.join(" · ") || "All Bali"}
+            Nearest first · {territory.join(" · ") || "All Bali"}
           </p>
         </div>
 

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, ChevronRight } from "lucide-react";
+import { Search, ChevronRight, Navigation } from "lucide-react";
+import { formatDistance } from "@/lib/utils";
 
 type Row = {
   id: string;
@@ -12,6 +13,7 @@ type Row = {
   brands: string[];
   freshLabel: string;
   stale: boolean;
+  distanceKm: number;
   href: string;
 };
 
@@ -56,6 +58,10 @@ export function RepCheckInList({ rows }: { rows: Row[] }) {
                 <span className={o.stale ? "text-glow" : "text-faint"}>{o.freshLabel}</span>
               </p>
             </div>
+            <span className="flex shrink-0 items-center gap-1 text-[12px] font-semibold text-ice">
+              <Navigation className="h-3 w-3" strokeWidth={2} />
+              {formatDistance(o.distanceKm)}
+            </span>
             <ChevronRight className="h-4 w-4 shrink-0 text-faint" />
           </Link>
         ))}
