@@ -326,13 +326,19 @@ export function VisitCapture(props: {
                               <p className="tabular text-[12px]">
                                 IDR {formatIDR(i.lastPrice ?? i.listPrice)}
                               </p>
-                              <p
-                                className={`text-[10px] ${
-                                  i.lastPrice != null ? "text-ice" : "text-faint"
-                                }`}
-                              >
-                                {i.lastPrice != null ? "Last agreed" : "List price"}
-                              </p>
+                              {i.lastPrice != null ? (
+                                <p className="text-[10px] text-ice">
+                                  Last agreed
+                                  {i.lastPrice !== i.listPrice && (
+                                    <span className="text-faint">
+                                      {" "}
+                                      · list {formatIDR(i.listPrice)}
+                                    </span>
+                                  )}
+                                </p>
+                              ) : (
+                                <p className="text-[10px] text-faint">List price</p>
+                              )}
                             </div>
                           </button>
                         ) : (
@@ -378,6 +384,12 @@ export function VisitCapture(props: {
                           }`}
                         >
                           {l.isRemembered ? "Last agreed price" : "List price"}
+                          {l.isRemembered && l.price !== l.listPrice && (
+                            <span className="opacity-70">
+                              {" "}
+                              · list {formatIDR(l.listPrice)}
+                            </span>
+                          )}
                         </span>
                       </div>
                       <button
