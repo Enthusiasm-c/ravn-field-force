@@ -71,6 +71,7 @@ export default async function VisitPage({
       objective={visit.objective ?? "Regular Visit"}
       pic={visit.pic ?? visit.outlet.contactName ?? ""}
       backHref={`/rep/outlet/${visit.outletId}`}
+      outletId={visit.outletId}
       catalog={catalog}
       repCategories={repCategories}
       orderCode={orderCode}

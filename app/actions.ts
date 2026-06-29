@@ -3,6 +3,25 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+/** Persist the prices the rep agreed on this visit as the outlet's new price
+ *  memory (last agreed wins) — so the next visit auto-fills these. */
+export async function saveAgreedPrices(
+  outletId: string,
+  lines: { productId: string; unitPrice: number }[]
+) {
+  for (const l of lines) {
+    if (!l.unitPrice || l.unitPrice <= 0) continue;
+    await prisma.outletPrice.upsert({
+      where: { outletId_productId: { outletId, productId: l.productId } },
+      create: { outletId, productId: l.productId, unitPrice: l.unitPrice },
+      update: { unitPrice: l.unitPrice },
+    });
+  }
+  revalidatePath("/rep/visit/[code]", "page"); // next visit re-reads the memory
+  revalidatePath(`/rep/outlet/${outletId}`);
+  revalidatePath(`/console/outlets/${outletId}`);
+}
+
 export async function confirmOrder(orderId: string) {
   await prisma.order.update({
     where: { id: orderId },

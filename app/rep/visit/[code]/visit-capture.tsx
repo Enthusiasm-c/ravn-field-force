@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -19,6 +19,7 @@ import {
 import { PhoneFrame } from "@/components/phone-frame";
 import { VISIT_OBJECTIVES, photoSrc } from "@/lib/demo";
 import { formatIDR } from "@/lib/utils";
+import { saveAgreedPrices } from "@/app/actions";
 
 type Photo = { label: string; taken: boolean };
 type Item = {
@@ -51,6 +52,7 @@ export function VisitCapture(props: {
   objective: string;
   pic: string;
   backHref: string;
+  outletId: string;
   catalog: Item[];
   repCategories: string[];
   orderCode: string;
@@ -65,6 +67,7 @@ export function VisitCapture(props: {
   const [query, setQuery] = useState("");
   const [sent, setSent] = useState(false);
   const [sentCode, setSentCode] = useState("");
+  const [pending, startTransition] = useTransition();
   const taken = photos.filter((p) => p.taken).length;
 
   const total = lines.reduce((s, l) => s + l.price * l.qty, 0);
@@ -109,10 +112,28 @@ export function VisitCapture(props: {
     setLines((prev) =>
       prev.map((l) => (l.id === id ? { ...l, qty: Math.max(1, l.qty + delta) } : l))
     );
+  // Rep can renegotiate the price on the spot — edits the agreed unit price.
+  const setPrice = (id: string, raw: string) => {
+    const n = parseInt(raw.replace(/\D/g, ""), 10);
+    setLines((prev) =>
+      prev.map((l) =>
+        l.id === id ? { ...l, price: Number.isNaN(n) ? 0 : n } : l
+      )
+    );
+  };
 
   const finish = () => {
-    setSentCode(`ORD-${4423 + ((units * 3 + lines.length + props.code.length) % 77)}`);
-    setSent(true);
+    startTransition(async () => {
+      // Persist the agreed prices as the outlet's new price memory.
+      if (hasOrder) {
+        await saveAgreedPrices(
+          props.outletId,
+          lines.map((l) => ({ productId: l.id, unitPrice: l.price }))
+        );
+      }
+      setSentCode(`ORD-${4423 + ((units * 3 + lines.length + props.code.length) % 77)}`);
+      setSent(true);
+    });
   };
 
   // ── Confirmation — stays inside the phone, no role hop ──
@@ -377,36 +398,29 @@ export function VisitCapture(props: {
                       <div className="min-w-0 pr-2">
                         <p className="text-[13px] font-medium">{l.name}</p>
                         <p className="eyebrow mt-0.5">{l.sku}</p>
-                        {/* unit price — agreed vs list, each clearly labelled */}
-                        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                          {l.isRemembered ? (
-                            <>
-                              <span className="inline-flex items-baseline gap-1">
-                                <span className="text-[9px] font-medium uppercase tracking-wide text-faint">
-                                  Agreed
-                                </span>
-                                <span className="tabular text-[12px] font-semibold text-ice">
-                                  IDR {formatIDR(l.price)}
-                                </span>
-                              </span>
-                              {l.price !== l.listPrice && (
-                                <span className="inline-flex items-baseline gap-1">
-                                  <span className="text-[9px] font-medium uppercase tracking-wide text-faint">
-                                    List
-                                  </span>
-                                  <span className="tabular text-[12px] text-faint line-through">
-                                    {formatIDR(l.listPrice)}
-                                  </span>
-                                </span>
-                              )}
-                            </>
-                          ) : (
+                        {/* editable agreed unit price — rep renegotiates on the spot;
+                            saved as the outlet's new price memory on send */}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <label className="inline-flex items-center gap-1.5 rounded-lg border border-ice/30 bg-ice/[0.06] px-2 py-1">
+                            <span className="text-[9px] font-medium uppercase tracking-wide text-ice/70">
+                              Agreed
+                            </span>
+                            <span className="text-[11px] text-faint">IDR</span>
+                            <input
+                              inputMode="numeric"
+                              value={formatIDR(l.price)}
+                              onChange={(e) => setPrice(l.id, e.target.value)}
+                              aria-label="Agreed price per bottle"
+                              className="tabular w-[84px] bg-transparent text-[13px] font-semibold text-ice outline-none"
+                            />
+                          </label>
+                          {l.price !== l.listPrice && (
                             <span className="inline-flex items-baseline gap-1">
                               <span className="text-[9px] font-medium uppercase tracking-wide text-faint">
-                                List price
+                                List
                               </span>
-                              <span className="tabular text-[12px]">
-                                IDR {formatIDR(l.listPrice)}
+                              <span className="tabular text-[12px] text-faint line-through">
+                                {formatIDR(l.listPrice)}
                               </span>
                             </span>
                           )}
@@ -475,14 +489,19 @@ export function VisitCapture(props: {
           )}
           <button
             onClick={finish}
-            className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-3.5 text-[15px] font-semibold ${
+            disabled={pending}
+            className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-3.5 text-[15px] font-semibold transition-opacity disabled:opacity-70 ${
               hasOrder ? "bg-ice text-white" : "border border-border-strong text-muted"
             }`}
           >
             {hasOrder ? (
-              <>
-                Send order <ArrowRight className="h-4 w-4" />
-              </>
+              pending ? (
+                "Sending…"
+              ) : (
+                <>
+                  Send order <ArrowRight className="h-4 w-4" />
+                </>
+              )
             ) : (
               "Finish visit · no order"
             )}
