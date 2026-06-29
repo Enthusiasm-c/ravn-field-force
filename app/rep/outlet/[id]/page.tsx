@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, MapPin, Phone, ArrowRight } from "lucide-react";
+import { ChevronLeft, MapPin, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { PhoneFrame } from "@/components/phone-frame";
 import { OutletTabs } from "@/components/outlet-tabs";
@@ -102,10 +102,9 @@ export default async function RepOutletCard({
             <p className="text-[15px] font-semibold">{outlet.contactName}</p>
             <a
               href={`tel:${(outlet.contactPhone ?? "").replace(/\s/g, "")}`}
-              className="flex items-center gap-1.5 text-[12px] text-ice"
+              className="tabular text-[12px] font-medium text-ice"
             >
-              <Phone className="h-3.5 w-3.5" />
-              Call
+              {outlet.contactPhone ?? "—"}
             </a>
           </div>
         ) : (
@@ -113,7 +112,6 @@ export default async function RepOutletCard({
         )}
         <div className="mt-2.5 border-t border-border/60 pt-1">
           <Row label="Type" value={OUTLET_TYPE_LABEL[outlet.type]} />
-          <Row label="Brands" value={outlet.brands.join(" · ") || "—"} />
           <Row label="Account" value={outlet.priority ? "Priority" : "Standard"} />
         </div>
       </div>

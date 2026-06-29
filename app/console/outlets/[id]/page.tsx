@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, MapPin, Phone, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { ChevronLeft, MapPin, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { ConsoleTopbar } from "@/components/console-topbar";
 import { SalesTrend } from "@/components/sales-trend";
@@ -109,9 +109,8 @@ export default async function OutletDetailPage({
               <p className="text-[16px] font-semibold">{outlet.contactName}</p>
               <a
                 href={`tel:${(outlet.contactPhone ?? "").replace(/\s/g, "")}`}
-                className="mt-1 inline-flex items-center gap-1.5 text-[12px] text-ice"
+                className="tabular mt-1 inline-block text-[12px] font-medium text-ice"
               >
-                <Phone className="h-3.5 w-3.5" />
                 {outlet.contactPhone ?? "—"}
               </a>
             </div>
@@ -121,7 +120,6 @@ export default async function OutletDetailPage({
           <div className="mt-3 border-t border-border/60 pt-1">
             <Row label="Type" value={OUTLET_TYPE_LABEL[outlet.type]} />
             <Row label="Area" value={outlet.area} />
-            <Row label="Brands" value={outlet.brands.join(" · ") || "—"} />
             <Row label="Account" value={outlet.priority ? "Priority" : "Standard"} />
           </div>
         </Card>
