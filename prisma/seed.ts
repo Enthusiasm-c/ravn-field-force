@@ -95,7 +95,7 @@ async function main() {
     data: {
       name: "Putu Wirawan", initials: "PW", area: "Canggu · Seminyak",
       areas: ["Canggu", "Seminyak"],
-      categories: ["Jägermeister", "José Cuervo", "Whisky", "Liqueur"],
+      categories: ["Jägermeister", "José Cuervo", "Whisky", "Liqueur", "Tequila"],
     },
   });
   const ari = await prisma.rep.create({
